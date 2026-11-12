@@ -80,24 +80,22 @@
       /* ======================= 八音盒音频引擎 ======================= */
       let candlesLit = false,
         audioStarted = false;
-      let ctxAudio, masterGain;
+      let ctxAudio, masterGain, lowpassFilter;
       let activeOscillators = [];
       let loopTimer = null;
 
-      // 你指定的参数配置字典
-      // 你指定的参数配置字典 (已优化)
+      // 优化后的合成器配置：调优失谐与泛音，更温润通透
       const SYNTH_CONFIG = {
-        volFund: 0.85, // 稍微提高基频，让声音更暖
-        detuneCents: 8, // 降低一点失谐，减少走音感
-        attackGain: 0, // (废弃)
-        decayTime: 2.2, // 缩短延音，解决整体嗡嗡声
+        volFund: 0.82,
+        detuneCents: 4, // 微量失谐，保留八音盒特有的光泽但消除跑调与金属干涉音
+        decayTime: 2.3, // 舒适自然的八音盒衰减时间
         overtones: [
-          { ratio: 2.0, vol: 0.08 }, // 泛音一，少量高八度
-          { ratio: 3.0, vol: 0.02 }, // 泛音二，极少量十二度增加色彩
+          { ratio: 2.0, vol: 0.055 }, // 八度泛音
+          { ratio: 3.0, vol: 0.015 }, // 微量十二度泛音
         ],
       };
 
-      // 补全了低音域的 hz 对象
+      // 完整音域频率表
       const hz = {
         F1: 43.6,
         C2: 65.4,
@@ -106,6 +104,8 @@
         A2: 110.0,
         Bb2: 116.5,
         C3: 130.8,
+        D3: 146.8,
+        Eb3: 155.6,
         E3: 164.8,
         F3: 174.6,
         G3: 196.0,
@@ -113,6 +113,7 @@
         Bb3: 233.1,
         C4: 261.6,
         D4: 293.7,
+        Eb4: 311.1,
         E4: 329.6,
         F4: 349.2,
         G4: 392.0,
@@ -129,6 +130,7 @@
         C6: 1046.5,
       };
 
+      // 主旋律
       const melody = [
         [hz.C5, 0, 0.75],
         [hz.C5, 0.75, 0.25],
@@ -157,16 +159,43 @@
         [hz.F5, 22, 3],
       ];
 
+      // 优化后的伴奏：补全小节内缺失的伴奏，形成优雅流动的八音盒分解律动
       const chords = [
-        [[hz.F2, hz.C3, hz.F3, hz.A3], 1],
-        [[hz.C2, hz.G2, hz.C3, hz.E3], 4],
-        [[hz.C2, hz.G2, hz.C3, hz.E3], 7],
-        [[hz.F2, hz.C3, hz.A3, hz.C4], 10],
-        [[hz.F2, hz.A2, hz.C3, hz.F3], 13],
+        // 第 1 小节 (F)
+        [[hz.F2, hz.C3, hz.A3], 1],
+        [[hz.F3, hz.C4], 2],
+        [[hz.A3, hz.F4], 3],
+
+        // 第 2 小节 (C7)
+        [[hz.C3, hz.G3, hz.E4], 4],
+        [[hz.G3, hz.C4], 5],
+
+        // 第 3 小节 (C7)
+        [[hz.C3, hz.G3, hz.Bb3, hz.E4], 7],
+        [[hz.E3, hz.Bb3], 8],
+        [[hz.G3, hz.C4], 9],
+
+        // 第 4 小节 (F)
+        [[hz.F2, hz.C3, hz.F3, hz.A3], 10],
+        [[hz.A3, hz.C4], 11],
+
+        // 第 5 小节 (F -> F7 高潮句 "dear Zari")
+        [[hz.F2, hz.C3, hz.F3, hz.A3, hz.C4], 13],
+        [[hz.F3, hz.A3], 14],
+        [[hz.C3, hz.F3, hz.A3, hz.Eb4], 15],
+
+        // 第 6 小节 (Bb)
         [[hz.Bb2, hz.F3, hz.Bb3, hz.D4], 16],
+        [[hz.F3, hz.D4], 17],
+
+        // 第 7 小节 (F -> C7)
         [[hz.F2, hz.C3, hz.F3, hz.A3], 19],
-        [[hz.C2, hz.G2, hz.C3, hz.E3], 21],
-        [[hz.F1, hz.C2, hz.F2, hz.A2, hz.C3, hz.F3, hz.A3, hz.C4], 22],
+        [[hz.F3, hz.A3], 20],
+        [[hz.C3, hz.G3, hz.Bb3, hz.E4], 21],
+
+        // 第 8 小节 (F 终曲华丽大琶音与余韵)
+        [[hz.F2, hz.C3, hz.F3, hz.A3, hz.C4, hz.F4], 22],
+        [[hz.C4, hz.A4], 23],
       ];
 
       function initAudio() {
@@ -174,37 +203,56 @@
         audioStarted = true;
         ctxAudio = new (window.AudioContext || window.webkitAudioContext)();
 
+        // 1. 低通滤波器：消除高频毛刺与尖锐感，塑造八音盒箱体温暖共振
+        lowpassFilter = ctxAudio.createBiquadFilter();
+        lowpassFilter.type = "lowpass";
+        lowpassFilter.frequency.value = 2800;
+        lowpassFilter.Q.value = 0.7;
+
+        // 2. 动态压限器：防止和弦叠加时爆音或破音
         const compressor = ctxAudio.createDynamicsCompressor();
-        compressor.threshold.value = -24; // 阈值调低，更早介入压限
-        compressor.ratio.value = 8; // 压缩比调大，死死压住爆音
+        compressor.threshold.value = -20;
+        compressor.knee.value = 12;
+        compressor.ratio.value = 8;
+        compressor.attack.value = 0.003;
+        compressor.release.value = 0.25;
 
+        // 3. 总音量控制
         masterGain = ctxAudio.createGain();
-        masterGain.gain.value = 0.2; // 【修改点】：总音量降到 0.2，彻底消除 Cracky 电流声
+        masterGain.gain.value = 0.26;
 
-        masterGain.connect(compressor);
+        masterGain.connect(lowpassFilter);
+        lowpassFilter.connect(compressor);
         compressor.connect(ctxAudio.destination);
 
         playAllParts();
       }
 
       function playEngineNote(freq, startTime, isBass = false) {
-        // 【修改点】：低频延音必须比主旋律更短（0.6倍），低音才不会嗡嗡作响
+        // 低音延音适度保留，避免低音骤停断层
         const duration = isBass
-          ? SYNTH_CONFIG.decayTime * 0.6
+          ? SYNTH_CONFIG.decayTime * 0.95
           : SYNTH_CONFIG.decayTime;
-        // 低音音量进一步下调，把频段让给旋律
-        const volScale = isBass ? 0.35 : 1.0;
+
+        // 提高伴奏音量到 0.72（此前 0.35 太低导致听不清）
+        const volScale = isBass ? 0.72 : 1.0;
+
+        // 高音等响度曲线补偿：频率高于 700Hz 时微降增益，彻底告别高音刺耳
+        let keyScale = 1.0;
+        if (!isBass && freq > 700) {
+          keyScale = Math.max(0.68, 1.0 - ((freq - 700) / 1200) * 0.32);
+        }
 
         const envNode = ctxAudio.createGain();
         envNode.gain.setValueAtTime(0, startTime);
-        // 【修改点】：使用 linearRamp 建立 0.02 秒的平滑起音，完美切断音符开头的爆裂声
-        envNode.gain.linearRampToValueAtTime(1.0 * volScale, startTime + 0.02);
-        envNode.gain.setTargetAtTime(0, startTime + 0.03, duration / 3);
+        // 0.025s 柔和起音，消除音符敲击杂音
+        envNode.gain.linearRampToValueAtTime(0.85 * volScale * keyScale, startTime + 0.025);
+        envNode.gain.setTargetAtTime(0, startTime + 0.03, duration / 3.2);
 
         envNode.connect(masterGain);
 
         const createOsc = (f, vol, type = "sine", detune = 0) => {
-          if (vol <= 0) return;
+          if (vol <= 0 || !f) return;
           const osc = ctxAudio.createOscillator();
           const g = ctxAudio.createGain();
           osc.type = type;
@@ -213,24 +261,32 @@
           g.gain.value = vol;
           osc.connect(g).connect(envNode);
           osc.start(startTime);
-          osc.stop(startTime + duration + 1);
+          osc.stop(startTime + duration + 0.5);
           activeOscillators.push(osc);
         };
 
+        // 基频与微失谐双音轨
         createOsc(freq, SYNTH_CONFIG.volFund);
         createOsc(
           freq,
-          SYNTH_CONFIG.volFund * 0.5,
+          SYNTH_CONFIG.volFund * 0.45,
           "sine",
           SYNTH_CONFIG.detuneCents
         );
 
+        // 高音区适度收敛泛音，中低音区保持丰满
+        const overtoneDamp = freq > 700 ? 0.4 : 1.0;
         SYNTH_CONFIG.overtones.forEach((ot) => {
-          createOsc(freq * ot.ratio, ot.vol);
+          createOsc(freq * ot.ratio, ot.vol * overtoneDamp);
         });
 
-        // 【修改点】：直接删除了产生奇怪高频泛音的 Triangle attackGain 代码块
+        // 针对低频补充温和的倍频，保证在手机与轻薄本小扬声器上清晰呈现低音
+        if (isBass && freq < 200) {
+          createOsc(freq * 2, 0.16, "sine");
+          createOsc(freq * 3, 0.04, "sine");
+        }
       }
+
       function playAllParts() {
         if (ctxAudio.state === "suspended") ctxAudio.resume();
 
@@ -249,12 +305,12 @@
 
         chords.forEach(([notes, b]) => {
           notes.forEach((f, i) => {
-            let rollDelay = i * 0.06;
+            let rollDelay = i * 0.055; // 清脆自然的琶音滚音
             playEngineNote(f, now + b * beatLen + rollDelay, true);
           });
         });
 
-        loopTimer = setTimeout(playAllParts, 24 * beatLen * 1000 + 2000);
+        loopTimer = setTimeout(playAllParts, 24 * beatLen * 1000 + 1500);
       }
 
       /* ======================= Canvas 初始化 ======================= */
