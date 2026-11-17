@@ -1,619 +1,1796 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Happy Birthday Zari</title>
-    <style>
-      html,
-      body {
-        margin: 0;
-        padding: 0;
-        overflow: hidden;
-        background: #050508;
-        font-family: "Times New Roman", serif;
-      }
-      canvas {
-        display: block;
-      }
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="color-scheme" content="dark" />
+  <title>18 November · Chapter 19</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=JetBrains+Mono:wght@300;400&family=Vazirmatn:wght@300;400;500&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+  <noscript><link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=JetBrains+Mono:wght@300;400&family=Vazirmatn:wght@300;400;500&display=swap" rel="stylesheet"></noscript>
+  <style>
+    :root {
+      --bg: #07080d;
+      --ink: #ede7dc;
+      --ink-soft: #b8b2a6;
+      --ink-muted: #6c7385;
+      --champagne: #d8c8b0;
+      --slate: #7f92b0;
+      --rose: #b87d8b;
+      --serif: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
+      --mono: 'JetBrains Mono', ui-monospace, Menlo, Consolas, monospace;
+      --fa: 'Vazirmatn', Tahoma, 'Segoe UI', system-ui, sans-serif;
+    }
 
-      #letter-box {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -40%);
-        width: 85%;
-        max-width: 650px;
-        background: rgba(10, 10, 15, 0.65);
-        backdrop-filter: blur(8px);
-        -webkit-backdrop-filter: blur(8px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 12px;
-        padding: 40px 50px;
-        color: rgba(255, 255, 255, 0.95);
-        line-height: 1.8;
-        font-size: 17px;
-        text-align: left;
-        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.9);
-        z-index: 9999;
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
 
-        opacity: 0;
-        pointer-events: none;
-        transition: opacity 3s ease-in-out, transform 3s ease-out;
-      }
+    html, body {
+      width: 100%;
+      height: 100%;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: var(--serif);
+      overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
 
-      #letter-box.visible {
-        opacity: 1;
-        transform: translate(-50%, -50%);
-        pointer-events: auto;
-      }
+    /* Ambient Starfield Canvas */
+    #sky-canvas {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      pointer-events: none;
+      transition: opacity 1.4s ease;
+    }
 
-      #letter-box p {
-        margin-bottom: 20px;
-        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
-      }
-      #letter-box .greeting {
-        font-family: "Cooper Black", serif;
-        font-size: 28px;
-        color: #ffd7dd;
-        margin-bottom: 25px;
-      }
-      .signature {
-        text-align: right;
-        font-family: "Cooper Black", serif;
-        font-size: 20px;
-        color: #ffcad4;
-        margin-top: 30px;
-      }
-    </style>
-  </head>
-  <body>
-    <canvas id="c"></canvas>
+    /* Subtle SVG Film Grain Overlay */
+    .film-grain {
+      position: fixed;
+      inset: 0;
+      z-index: 2;
+      pointer-events: none;
+      opacity: 0.045;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    }
 
-    <div id="letter-box">
-      <div class="greeting">Zari,</div>
-      <p>ha</p>
+    /* Subtle Anamorphic Vignette */
+    .vignette {
+      position: fixed;
+      inset: 0;
+      z-index: 3;
+      pointer-events: none;
+      background: radial-gradient(circle at 50% 45%, transparent 40%, rgba(3, 4, 8, 0.86) 100%);
+    }
 
-      <div class="signature">— Defei</div>
+    /* Three-Act Long-Take Stages */
+    .act {
+      position: fixed;
+      inset: 0;
+      z-index: 10;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 1.1s cubic-bezier(0.22, 1, 0.36, 1), transform 1.1s cubic-bezier(0.22, 1, 0.36, 1);
+      transform: translateY(14px);
+    }
+
+    .act.active {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateY(0);
+    }
+
+    /* ================= ACT I: OPENING BREATH ================= */
+    #act-1 {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 32px 24px;
+      cursor: pointer;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    .date-tag {
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.32em;
+      text-transform: uppercase;
+      color: var(--slate);
+      margin-bottom: 24px;
+      opacity: 0.85;
+    }
+
+    .hero-title {
+      font-weight: 300;
+      font-size: clamp(2.4rem, 7vw, 4.6rem);
+      line-height: 1.08;
+      letter-spacing: -0.01em;
+      color: var(--ink);
+    }
+
+    .hero-title em {
+      font-style: italic;
+      color: var(--champagne);
+    }
+
+    .hero-fa {
+      font-family: var(--fa);
+      font-weight: 300;
+      font-size: clamp(1.35rem, 3.8vw, 1.9rem);
+      color: var(--slate);
+      margin-top: 18px;
+      letter-spacing: 0.02em;
+    }
+
+    .enter-cue {
+      position: absolute;
+      bottom: max(36px, env(safe-area-inset-bottom, 36px));
+      font-family: var(--mono);
+      font-size: 10.5px;
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+      color: var(--ink-muted);
+      animation: pulseCue 2.8s ease-in-out infinite;
+    }
+
+    @keyframes pulseCue {
+      0%, 100% { opacity: 0.35; transform: translateY(0); }
+      50% { opacity: 0.9; transform: translateY(-4px); }
+    }
+
+    /* ================= ACT II: 19 CANDLES RITUAL ================= */
+    #act-2 {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      padding: max(28px, env(safe-area-inset-top, 28px)) 20px max(28px, env(safe-area-inset-bottom, 28px));
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+    }
+
+    .ritual-head {
+      text-align: center;
+      max-width: 520px;
+      z-index: 2;
+    }
+
+    .ritual-kicker {
+      font-family: var(--mono);
+      font-size: 10.5px;
+      letter-spacing: 0.26em;
+      text-transform: uppercase;
+      color: var(--slate);
+      margin-bottom: 8px;
+    }
+
+    .ritual-title {
+      font-weight: 400;
+      font-size: clamp(1.75rem, 4.5vw, 2.6rem);
+      color: var(--champagne);
+      font-style: italic;
+    }
+
+    .ritual-whisper {
+      margin-top: 6px;
+      font-size: 1rem;
+      color: var(--ink-soft);
+      min-height: 1.5em;
+      transition: opacity 0.4s ease;
+    }
+
+    .cake-wrap {
+      position: relative;
+      width: min(560px, 100%);
+      height: min(410px, 52vh);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #cake-canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+      touch-action: none;
+    }
+
+    .ritual-controls {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+      z-index: 2;
+      width: 100%;
+      max-width: 440px;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+    }
+
+    .wind-bar-wrap {
+      width: 180px;
+      height: 2px;
+      background: rgba(127, 146, 176, 0.2);
+      border-radius: 99px;
+      overflow: hidden;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .wind-bar-wrap.visible {
+      opacity: 1;
+    }
+
+    .wind-bar-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--slate), var(--champagne));
+      transition: width 0.08s linear;
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: center;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+    }
+
+    .quiet-btn {
+      background: rgba(216, 200, 176, 0.06);
+      border: 1px solid rgba(216, 200, 176, 0.25);
+      color: var(--champagne);
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      padding: 12px 20px;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+    }
+
+    .quiet-btn:hover, .quiet-btn.active {
+      background: rgba(216, 200, 176, 0.16);
+      border-color: rgba(216, 200, 176, 0.58);
+    }
+
+    .quiet-btn.primary {
+      background: var(--champagne);
+      color: var(--bg);
+      border-color: var(--champagne);
+      font-weight: 500;
+    }
+
+    .quiet-btn.primary:hover {
+      filter: brightness(1.06);
+    }
+
+    .micro-link {
+      background: none;
+      border: none;
+      color: var(--ink-muted);
+      font-family: var(--mono);
+      font-size: 10.5px;
+      letter-spacing: 0.14em;
+      cursor: pointer;
+      padding: 6px 10px;
+      transition: color 0.25s ease;
+    }
+
+    .micro-link:hover {
+      color: var(--champagne);
+    }
+
+    /* ================= ACT III: MUSIC & LETTER ================= */
+    #act-3 {
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding: max(56px, env(safe-area-inset-top, 56px)) 24px 96px;
+    }
+
+    .letter-shell {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .audio-whisper-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(216, 200, 176, 0.14);
+      padding-bottom: 16px;
+      margin-bottom: 38px;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .letter-date {
+      font-family: var(--mono);
+      font-size: 10.5px;
+      letter-spacing: 0.2em;
+      color: var(--slate);
+      text-transform: uppercase;
+    }
+
+    .music-toggle {
+      background: none;
+      border: 1px solid rgba(127, 146, 176, 0.3);
+      color: var(--champagne);
+      font-family: var(--mono);
+      font-size: 10.5px;
+      letter-spacing: 0.1em;
+      padding: 6px 14px;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: all 0.25s ease;
+    }
+
+    .music-toggle:hover {
+      border-color: var(--champagne);
+      background: rgba(216, 200, 176, 0.08);
+    }
+
+    .letter-fa-head {
+      font-family: var(--fa);
+      font-weight: 300;
+      font-size: 1.45rem;
+      color: var(--champagne);
+      margin-bottom: 26px;
+      text-align: right;
+    }
+
+    .letter-body {
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+      font-size: clamp(1.18rem, 2.4vw, 1.36rem);
+      line-height: 1.82;
+      color: var(--ink);
+      font-weight: 300;
+    }
+
+    .letter-line {
+      opacity: 0;
+      transform: translateY(14px);
+      transition: opacity 0.9s ease, transform 0.9s ease;
+    }
+
+    .letter-line.shown {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Micro Easter Eggs embedded naturally in text */
+    .egg {
+      border-bottom: 1px dotted rgba(216, 200, 176, 0.45);
+      color: var(--champagne);
+      cursor: pointer;
+      transition: color 0.2s ease, border-color 0.2s ease;
+    }
+
+    .egg:hover {
+      color: var(--ink);
+      border-bottom-color: var(--champagne);
+    }
+
+    .letter-sign {
+      margin-top: 20px;
+      padding-top: 22px;
+      border-top: 1px solid rgba(216, 200, 176, 0.14);
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      flex-wrap: wrap;
+      gap: 12px;
+      font-style: italic;
+      color: var(--champagne);
+      font-size: 1.28rem;
+    }
+
+    .letter-sign span:last-child {
+      font-family: var(--mono);
+      font-style: normal;
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      color: var(--slate);
+    }
+
+    /* Floating Micro-Whisper Toast for Easter Eggs & Cake Interactions */
+    #whisper-toast {
+      position: fixed;
+      left: 50%;
+      bottom: max(26px, env(safe-area-inset-bottom, 26px));
+      transform: translateX(-50%) translateY(12px);
+      z-index: 40;
+      max-width: min(440px, calc(100vw - 32px));
+      padding: 10px 18px;
+      border-radius: 999px;
+      background: rgba(13, 16, 26, 0.9);
+      border: 1px solid rgba(216, 200, 176, 0.28);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      font-family: var(--serif);
+      font-style: italic;
+      font-size: 1rem;
+      color: var(--champagne);
+      text-align: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.35s ease, transform 0.35s ease;
+    }
+
+    #whisper-toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    @media (max-width: 540px) {
+      .cake-wrap { height: min(350px, 46vh); }
+      .quiet-btn { padding: 11px 16px; font-size: 10.5px; }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="sky-canvas" aria-hidden="true"></canvas>
+  <div class="film-grain" aria-hidden="true"></div>
+  <div class="vignette" aria-hidden="true"></div>
+
+  <!-- ================= ACT I: OPENING ================= -->
+  <section id="act-1" class="act active" role="button" tabindex="0" aria-label="Enter">
+    <h1 class="hero-title">18 November<br><em>Chapter 19</em></h1>
+    <div class="hero-fa" dir="rtl" lang="fa">تولدت مبارک زری</div>
+    <div class="enter-cue">Tap anywhere to enter</div>
+  </section>
+
+  <!-- ================= ACT II: 19 CANDLES & BRASS LIGHTER ================= -->
+  <section id="act-2" class="act">
+    <div class="ritual-head">
+      <div class="ritual-kicker" id="candle-counter">19 / 19 Candles Lit</div>
+      <h2 class="ritual-title">Make a wish, Zari</h2>
+      <p class="ritual-whisper" id="ritual-whisper">
+        Blow across your microphone, or hold the button below.
+      </p>
     </div>
 
-    <script>
-      /* ======================= 八音盒音频引擎 ======================= */
-      let candlesLit = false,
-        audioStarted = false;
-      let ctxAudio, masterGain, lowpassFilter;
-      let activeOscillators = [];
-      let loopTimer = null;
+    <div class="cake-wrap">
+      <canvas id="cake-canvas"></canvas>
+    </div>
 
-      // 优化后的合成器配置：调优失谐与泛音，更温润通透
-      const SYNTH_CONFIG = {
-        volFund: 0.82,
-        detuneCents: 4, // 微量失谐，保留八音盒特有的光泽但消除跑调与金属干涉音
-        decayTime: 2.3, // 舒适自然的八音盒衰减时间
-        overtones: [
-          { ratio: 2.0, vol: 0.055 }, // 八度泛音
-          { ratio: 3.0, vol: 0.015 }, // 微量十二度泛音
-        ],
-      };
+    <div class="ritual-controls">
+      <div class="wind-bar-wrap" id="wind-bar-wrap">
+        <div class="wind-bar-fill" id="wind-bar-fill"></div>
+      </div>
 
-      // 完整音域频率表
-      const hz = {
-        F1: 43.6,
-        C2: 65.4,
-        F2: 87.3,
-        G2: 98.0,
-        A2: 110.0,
-        Bb2: 116.5,
-        C3: 130.8,
-        D3: 146.8,
-        Eb3: 155.6,
-        E3: 164.8,
-        F3: 174.6,
-        G3: 196.0,
-        A3: 220.0,
-        Bb3: 233.1,
-        C4: 261.6,
-        D4: 293.7,
-        Eb4: 311.1,
-        E4: 329.6,
-        F4: 349.2,
-        G4: 392.0,
-        A4: 440.0,
-        Bb4: 466.2,
-        B4: 493.9,
-        C5: 523.3,
-        D5: 587.3,
-        E5: 659.3,
-        F5: 698.5,
-        G5: 784.0,
-        A5: 880.0,
-        Bb5: 932.3,
-        C6: 1046.5,
-      };
+      <div class="btn-row">
+        <button type="button" class="quiet-btn primary" id="btn-hold-blow">💨 Hold to Blow</button>
+        <button type="button" class="quiet-btn" id="btn-mic-blow">🎙️ Use Mic</button>
+        <button type="button" class="quiet-btn" id="btn-lighter">🔥 Lighter</button>
+      </div>
 
-      // 主旋律
-      const melody = [
-        [hz.C5, 0, 0.75],
-        [hz.C5, 0.75, 0.25],
-        [hz.D5, 1, 1],
-        [hz.C5, 2, 1],
-        [hz.F5, 3, 1],
-        [hz.E5, 4, 2],
-        [hz.C5, 6, 0.75],
-        [hz.C5, 6.75, 0.25],
-        [hz.D5, 7, 1],
-        [hz.C5, 8, 1],
-        [hz.G5, 9, 1],
-        [hz.F5, 10, 2],
-        [hz.C5, 12, 0.75],
-        [hz.C5, 12.75, 0.25],
-        [hz.C6, 13, 1],
-        [hz.A5, 14, 1],
-        [hz.F5, 15, 1],
-        [hz.E5, 16, 1],
-        [hz.D5, 17, 1],
-        [hz.Bb5, 18, 0.75],
-        [hz.Bb5, 18.75, 0.25],
-        [hz.A5, 19, 1],
-        [hz.F5, 20, 1],
-        [hz.G5, 21, 1],
-        [hz.F5, 22, 3],
-      ];
+      <button type="button" class="micro-link" id="btn-skip-letter">or step straight to the letter →</button>
+    </div>
+  </section>
 
-      // 优化后的伴奏：补全小节内缺失的伴奏，形成优雅流动的八音盒分解律动
-      const chords = [
-        // 第 1 小节 (F)
-        [[hz.F2, hz.C3, hz.A3], 1],
-        [[hz.F3, hz.C4], 2],
-        [[hz.A3, hz.F4], 3],
+  <!-- ================= ACT III: TAVALODET MOBARAK & LETTER ================= -->
+  <section id="act-3" class="act">
+    <div class="letter-shell">
+      <div class="audio-whisper-bar">
+        <span class="letter-date">18 November · From Didi to Zaza</span>
+        <div style="display:flex; gap:10px; align-items:center;">
+          <button type="button" class="music-toggle" id="btn-music-toggle">❚❚ Pause Tavalodet</button>
+          <button type="button" class="micro-link" id="btn-back-cake" style="padding:4px 6px;">↺ Relight</button>
+        </div>
+      </div>
 
-        // 第 2 小节 (C7)
-        [[hz.C3, hz.G3, hz.E4], 4],
-        [[hz.G3, hz.C4], 5],
+      <div class="letter-fa-head" dir="rtl" lang="fa">تولدت مبارک زری</div>
 
-        // 第 3 小节 (C7)
-        [[hz.C3, hz.G3, hz.Bb3, hz.E4], 7],
-        [[hz.E3, hz.Bb3], 8],
-        [[hz.G3, hz.C4], 9],
+      <div class="letter-body" id="letter-body">
+        <p class="letter-line">
+          Happy 19th birthday, Zari—or as you once explained at 3:52 a.m., <em>“finished 18 some call it 19, some 18, so usually when they ask my age i just say I’m 11 or sth.”</em>
+        </p>
 
-        // 第 4 小节 (F)
-        [[hz.F2, hz.C3, hz.F3, hz.A3], 10],
-        [[hz.A3, hz.C4], 11],
+        <p class="letter-line">
+          Thanks for 75 movies and counting—from pausing at 1% battery and synced countdowns (<em>“I’m 51 / I’m 56”</em>), to hunting goat subtitle translations in <em>There Is No Evil</em>, fast-forwarding to the end of <em>Primer</em> because neither of us had a clue what happened, and spotting <span class="egg" data-egg="clair">Clair de Lune at minute 38</span> when the wine spills on his suit.
+        </p>
 
-        // 第 5 小节 (F -> F7 高潮句 "dear Zari")
-        [[hz.F2, hz.C3, hz.F3, hz.A3, hz.C4], 13],
-        [[hz.F3, hz.A3], 14],
-        [[hz.C3, hz.F3, hz.A3, hz.Eb4], 15],
+        <p class="letter-line">
+          Thanks for the portrait you drew and revised again and again in May, for the morning birb tweets, and for every single word in our chaotic dictionary: <span class="egg" data-egg="lala">lala / bulala</span>, busorry, buworry, <span class="egg" data-egg="sat">satisfaction’t ✅</span>, pawsetive energy, <em>“u da real vivobook,”</em> and <em>“u da real new continent.”</em>
+        </p>
 
-        // 第 6 小节 (Bb)
-        [[hz.Bb2, hz.F3, hz.Bb3, hz.D4], 16],
-        [[hz.F3, hz.D4], 17],
+        <p class="letter-line">
+          I hope 19 brings you calm nights, zero power blackouts, <span class="egg" data-egg="seat76">good movies at Seat #76</span> where nobody barks in the theater, and a cake plate that isn’t <span class="egg" data-egg="plate">too hard to chew</span>.
+        </p>
 
-        // 第 7 小节 (F -> C7)
-        [[hz.F2, hz.C3, hz.F3, hz.A3], 19],
-        [[hz.F3, hz.A3], 20],
-        [[hz.C3, hz.G3, hz.Bb3, hz.E4], 21],
+        <div class="letter-line letter-sign">
+          <span>Happy Birthday, Zaza — see u tomorrow, as always.</span>
+          <span>— Difei (Didi)</span>
+        </div>
+      </div>
+    </div>
+  </section>
 
-        // 第 8 小节 (F 终曲华丽大琶音与余韵)
-        [[hz.F2, hz.C3, hz.F3, hz.A3, hz.C4, hz.F4], 22],
-        [[hz.C4, hz.A4], 23],
-      ];
+  <div id="whisper-toast" role="status" aria-live="polite"></div>
 
-      function initAudio() {
-        if (audioStarted) return;
-        audioStarted = true;
-        ctxAudio = new (window.AudioContext || window.webkitAudioContext)();
+  <script>
+  (function() {
+    "use strict";
 
-        // 1. 低通滤波器：消除高频毛刺与尖锐感，塑造八音盒箱体温暖共振
-        lowpassFilter = ctxAudio.createBiquadFilter();
-        lowpassFilter.type = "lowpass";
-        lowpassFilter.frequency.value = 2800;
-        lowpassFilter.Q.value = 0.7;
+    /* =========================================================================
+       1. TAVALODET MOBARAK ENGINE (与 tavalodet_mobarak_player.html 同一份引擎)
+    ========================================================================= */
+/* ========================================================================
+   Tavalodet Mobarak 引擎 (Anoushiravan Rohani) —— 严格依据三份乐谱
+   - 时间单位：1 = 一个八分音符 ♪；6/8 拍一大拍 ♩. = 3；♩.=100 BPM
+   - 旋律 A / B 取自小提琴谱 (3/8, A 大调 → 移至 C 大调) 并与钢琴谱第 10-17 小节核对
+   - 可选前奏取自 Rohani 2017 钢琴谱第 1-9 小节 (含 1./2. 房子)
+   - 音色：Karplus-Strong 击弦物理建模 (三根微失谐琴弦 + 木槌敲击) = 波斯扬琴 Santur
+   ======================================================================== */
+const Engine = (function () {
+  const hz = {
+    F2: 87.31, G2: 98.00, A2: 110.00,
+    C3: 130.81, D3: 146.83, E3: 164.81, F3: 174.61, G3: 196.00, A3: 220.00, B3: 246.94,
+    C4: 261.63, D4: 293.66, E4: 329.63, F4: 349.23, G4: 392.00, A4: 440.00, B4: 493.88,
+    C5: 523.25
+  };
 
-        // 2. 动态压限器：防止和弦叠加时爆音或破音
-        const compressor = ctxAudio.createDynamicsCompressor();
-        compressor.threshold.value = -20;
-        compressor.knee.value = 12;
-        compressor.ratio.value = 8;
-        compressor.attack.value = 0.003;
-        compressor.release.value = 0.25;
+  // ---------------------------------------------------------------- 乐谱
+  // 主歌 A：小提琴谱 1-16 小节 (每个 3/8 小节 = 3 个八分音符)
+  function partAMelody(o, final) {
+    const endLen = final ? 6 : 3; // 末尾 C. 与连线 C. (小提琴谱最后两小节 a.~a.)
+    return [
+      // 1. Ta-va-lod        e♪ e♩ | a.
+      [hz.G4, o + 0, 1], [hz.G4, o + 1, 2], [hz.C5, o + 3, 3],
+      // 2. Ta-va-lod
+      [hz.G4, o + 6, 1], [hz.G4, o + 7, 2], [hz.C5, o + 9, 3],
+      // 3. Ta-va-lo-det mo-ba-rak   e♪ e♩ | a♪ a♩ | g♪ f♩ | g.
+      [hz.G4, o + 12, 1], [hz.G4, o + 13, 2], [hz.C5, o + 15, 1], [hz.C5, o + 16, 2],
+      [hz.B4, o + 18, 1], [hz.A4, o + 19, 2], [hz.B4, o + 21, 3],
+      // 4. Mo-ba-rak        e♪ e♩ | g.
+      [hz.G4, o + 24, 1], [hz.G4, o + 25, 2], [hz.B4, o + 27, 3],
+      // 5. Mo-ba-rak
+      [hz.G4, o + 30, 1], [hz.G4, o + 31, 2], [hz.B4, o + 33, 3],
+      // 6. Ta-va-lo-det mo-ba-rak   e♪ e♩ | f♪ e♩ | f♪ g♩ | a.
+      [hz.G4, o + 36, 1], [hz.G4, o + 37, 2], [hz.A4, o + 39, 1], [hz.G4, o + 40, 2],
+      [hz.A4, o + 42, 1], [hz.B4, o + 43, 2], [hz.C5, o + 45, endLen]
+    ];
+  }
 
-        // 3. 总音量控制
-        masterGain = ctxAudio.createGain();
-        masterGain.gain.value = 0.26;
+  // 副歌 B：小提琴谱 32-39 小节 (|: :| 反复)，24 个八分音符
+  function partBMelody(o) {
+    return [
+      [hz.G4, o + 0, 1],  [hz.A4, o + 1, 2],      // e♪ f♩
+      [hz.A4, o + 3, 2],  [hz.G4, o + 5, 1],      // f♩ e♪
+      [hz.F4, o + 6, 1],  [hz.E4, o + 7, 2],      // d♪ c♩
+      [hz.D4, o + 9, 3],                          // b.
+      [hz.D4, o + 12, 1], [hz.E4, o + 13, 2],     // b♪ c♩
+      [hz.E4, o + 15, 2], [hz.D4, o + 17, 1],     // c♩ b♪
+      [hz.E4, o + 18, 1], [hz.D4, o + 19, 2],     // c♪ b♩
+      [hz.C4, o + 21, 3]                          // a.
+    ];
+  }
 
-        masterGain.connect(lowpassFilter);
-        lowpassFilter.connect(compressor);
-        compressor.connect(ctxAudio.destination);
+  // 前奏：钢琴谱第 1–3 小节 (Rohani 2017)。右手下行音阶 → 终止长音；左手柱式和弦 → 分解和弦。
+  // 乐谱按 A 大调 / 高八度记谱，这里与主旋律一致移至 C 大调、低八度。
+  //   小节1  右手 C B A G F E (六个八分)   左手 C 和弦 (附点二分)
+  //   小节2  右手 D A G | F E D            左手 F 和弦 | G 和弦 (各附点四分)
+  //   小节3  右手 C. (+ 弱起 G G 交给主歌)   左手 E G C E G C 分解和弦
+  // 返回长度 15 = 6 + 6 + 3，前奏结束处即主歌 A 的 G G 弱起。
+  function introEvents() {
+    const mel = [], acc = [];
+    const scale = [[hz.C5, 0], [hz.B4, 1], [hz.A4, 2], [hz.G4, 3], [hz.F4, 4], [hz.E4, 5],
+                   [hz.D4, 6], [hz.A4, 7], [hz.G4, 8], [hz.F4, 9], [hz.E4, 10], [hz.D4, 11]];
+    scale.forEach(([f, t], i) => mel.push([f, t, i === 0 ? 1.6 : 1.2]));
+    mel.push([hz.C4, 12, 3]);
+    // 柱式和弦 (轻微琶音展开，更像真人弹奏)，力度偏轻
+    const roll = (t, notes, dur, v) => notes.forEach((f, k) => acc.push([f, t + k * 0.12, dur - k * 0.12, v]));
+    roll(0, [hz.C3, hz.G3, hz.C4, hz.E4], 6, 0.55);
+    roll(6, [hz.F3, hz.A3, hz.C4, hz.F4], 3, 0.5);
+    roll(9, [hz.G3, hz.B3, hz.D4], 3, 0.5);
+    // 小节 3 左手分解和弦 (后半拍落在主歌弱起之下)
+    [[hz.E3, 12], [hz.G3, 13], [hz.C4, 14], [hz.E3, 15], [hz.G3, 16], [hz.C4, 17]].forEach(([f, t]) => acc.push([f, t, 1.4, 0.45]));
+    return { mel, acc, length: 15 };
+  }
 
-        playAllParts();
+  // 左手伴奏：参照钢琴谱左手「低音 - 五度 - 八度」流动型，每个 6/8 小节(6 个八分)一组
+  const CH = {
+    C:   [hz.C3, hz.G3, hz.C4, hz.E4],
+    G7:  [hz.G2, hz.D3, hz.G3, hz.B3],
+    G7D: [hz.D3, hz.G3, hz.B3, hz.D4],
+    G7F: [hz.F3, hz.G3, hz.B3, hz.D4],
+    Dm:  [hz.D3, hz.A3, hz.D4, hz.F4]
+  };
+  function pulse(out, t, name) {
+    const [r, f, top, third] = CH[name];
+    out.push([r, t, 3, 0.8], [f, t + 1, 2, 0.5], [top, t + 2, 3, 0.5], [third, t + 3, 2, 0.36]);
+  }
+  function accompA(o, final) {
+    const out = [];
+    // 钢琴谱第 10-17 小节：每个 6/8 小节从弱起之后(第 3 个八分音符)开始
+    ['C', 'C', 'C', 'G7', 'G7D', 'G7F', 'Dm', 'C'].forEach((name, k) => {
+      const t = o + 3 + 6 * k;
+      if (final && k === 7) {
+        out.push([hz.C3, t, 6, 0.9], [hz.G3, t, 6, 0.6], [hz.C4, t, 6, 0.6], [hz.E4, t + 1, 5, 0.45]);
+      } else {
+        pulse(out, t, name);
       }
+    });
+    return out;
+  }
+  function accompB(o) {
+    const out = [];
+    pulse(out, o + 0, 'C');
+    pulse(out, o + 6, 'Dm');
+    pulse(out, o + 12, 'G7');
+    pulse(out, o + 18, 'C');
+    return out;
+  }
 
-      function playEngineNote(freq, startTime, isBass = false) {
-        // 低音延音适度保留，避免低音骤停断层
-        const duration = isBass
-          ? SYNTH_CONFIG.decayTime * 0.95
-          : SYNTH_CONFIG.decayTime;
+  const LYR = {
+    ta:  { fa: "تولّد، تولّد",         ipa: "/tævælˈlod | tævælˈlod/",     sol: "Sol(1+2) Do(3)" },
+    tm:  { fa: "تولّدت مبارک",         ipa: "/tævælˈlodet mobɒːˈɾæk/",      sol: "Sol(1+2) Do(1+2) Si(1) La(2) Si(3)" },
+    mb:  { fa: "مبارک، مبارک",         ipa: "/mobɒːˈɾæk | mobɒːˈɾæk/",      sol: "Sol(1+2) Si(3)" },
+    tm2: { fa: "تولّدت مبارک",         ipa: "/tævælˈlodet mobɒːˈɾæk/",      sol: "Sol(1+2) La(1) Sol(2) La(1) Si(2) Do(3)" },
+    b1:  { fa: "لبت شاد و دلت خوش",    ipa: "/læˈbet ʃɒːd o deˈlet xoʃ/",    sol: "Sol(1) La(2) La(2) Sol(1) Fa(1) Mi(2) Re(3)" },
+    b2:  { fa: "چو گل پرخنده باشی",    ipa: "/tʃo ɡol poɾxænˈde bɒːˈʃiː/",  sol: "Re(1) Mi(2) Mi(2) Re(1) Mi(1) Re(2) Do(3)" },
+    b3:  { fa: "بیا شمع‌ها رو فوت کن", ipa: "/biːˈjɒː ʃæˈmɒː ɾo fuːt kon/", sol: "Sol(1) La(2) La(2) Sol(1) Fa(1) Mi(2) Re(3)" },
+    b4:  { fa: "که صد سال زنده باشی",   ipa: "/ke sæd sɒːl zenˈde bɒːˈʃiː/", sol: "Re(1) Mi(2) Mi(2) Re(1) Mi(1) Re(2) Do(3)" }
+  };
 
-        // 提高伴奏音量到 0.72（此前 0.35 太低导致听不清）
-        const volScale = isBass ? 0.72 : 1.0;
+  // 整体结构 (小提琴谱)：A  A  |: B :|  A(结尾)   (可选前奏：钢琴谱 1-9 小节)
+  function buildArrangement(opts) {
+    const melody = [], accomp = [], timeline = [];
+    let cursor = 0, introMel = 0, introAcc = 0;
+    if (opts && opts.intro) {
+      const it = introEvents();
+      melody.push(...it.mel); accomp.push(...it.acc);
+      timeline.push({ section: "前奏 · 钢琴谱第 1–3 小节", start: 0, end: it.length,
+        fa: "پیش‌درآمد پیانو", ipa: "C B A G F E · D A G F E D · C", sol: "Intro" });
+      cursor = it.length; // 前奏结束处即主歌 A 的 G G 弱起
+      introMel = it.mel.length; introAcc = it.acc.length;
+    }
+    const addA = (label, final) => {
+      const s = cursor;
+      melody.push(...partAMelody(s, final));
+      accomp.push(...accompA(s, final));
+      const e = final ? 51 : 48;
+      timeline.push(
+        { section: label, start: s, end: s + 6,  ...LYR.ta },
+        { start: s + 6,  end: s + 12, ...LYR.ta },
+        { start: s + 12, end: s + 24, ...LYR.tm },
+        { start: s + 24, end: s + 30, ...LYR.mb },
+        { start: s + 30, end: s + 36, ...LYR.mb },
+        { start: s + 36, end: s + e,  ...LYR.tm2 }
+      );
+      cursor += e;
+    };
+    addA("主歌 · A (第 1 遍)", false);
+    addA("主歌 · A (反复)", false);
+    // B (反复 :| 两遍)
+    const bs = cursor;
+    [0, 24].forEach(p => { melody.push(...partBMelody(bs + p)); accomp.push(...accompB(bs + p)); });
+    timeline.push(
+      { section: "副歌 · B (|: :| 反复)", start: bs,      end: bs + 12, ...LYR.b1 },
+      { start: bs + 12, end: bs + 24, ...LYR.b2 },
+      { start: bs + 24, end: bs + 36, ...LYR.b3 },
+      { start: bs + 36, end: bs + 48, ...LYR.b4 }
+    );
+    cursor += 48;
+    addA("尾声 · A (再现，末音延长)", true);
+    return { melody, accomp, timeline, total: cursor, introLen: cursor && introMel ? (opts.intro ? 15 : 0) : 0, introMel, introAcc };
+  }
 
-        // 高音等响度曲线补偿：频率高于 700Hz 时微降增益，彻底告别高音刺耳
-        let keyScale = 1.0;
-        if (!isBass && freq > 700) {
-          keyScale = Math.max(0.68, 1.0 - ((freq - 700) / 1200) * 0.32);
-        }
+  // ---------------------------------------------------------------- 音色 / 引擎
+  const params = { tau: 1.7, bright: 0.64, echo: 0.24 };
+  // 音色微调旋钮：想更亮 → 提高 leadCut / exciteAlpha；想更柔 → 降低；想更“闪” → 加大 detune
+  const TIMBRE = {
+    detune: [-2.0, 0.3, 2.2],   // 三根弦失谐 (音分)：扬琴的“闪烁”来源
+    exciteAlpha: 0.6,           // 木槌激励的亮度 (越大越亮)
+    leadCut: 7000,              // 旋律音高频截止 (Hz)
+    softCut: 3200,              // 伴奏音高频截止 (Hz)
+    tick: 0.22                  // 木槌敲击“叮”声强度
+  };
+  let ctx = null, dry = null, echoSend = null;
+  const bufCache = new Map();
+  const active = new Set();
+  let timer = null, playing = false, queue = [], qi = 0, t0 = 0, eighth = 0.2, total = 0, loop = true, onEnd = null, loopQ = null, loopTotal = 0;
 
-        const envNode = ctxAudio.createGain();
-        envNode.gain.setValueAtTime(0, startTime);
-        // 0.025s 柔和起音，消除音符敲击杂音
-        envNode.gain.linearRampToValueAtTime(0.85 * volScale * keyScale, startTime + 0.025);
-        envNode.gain.setTargetAtTime(0, startTime + 0.03, duration / 3.2);
+  function mulberry32(a) {
+    return function () {
+      a |= 0; a = a + 0x6D2B79F5 | 0;
+      let t = Math.imul(a ^ a >>> 15, 1 | a);
+      t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+      return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    };
+  }
 
-        envNode.connect(masterGain);
+  // Karplus-Strong 击弦：噪声激励 (带击弦位置梳状滤波) + 环路低通 + 全通分数延迟调音
+  function addString(out, f, sr, tau, a, strikePos, rnd, amp) {
+    const N = sr / f - (1 - a);
+    let Ni = Math.floor(N);
+    let d = N - Ni;
+    if (d < 0.3) { Ni -= 1; d += 1; }
+    if (Ni < 4) return;
+    const C = (1 - d) / (1 + d);
+    const buf = new Float32Array(Ni);
+    const noise = new Float32Array(Ni);
+    let l1 = 0;
+    for (let i = 0; i < Ni; i++) { l1 += TIMBRE.exciteAlpha * ((rnd() * 2 - 1) - l1); noise[i] = l1 * 1.6; }
+    const k = Math.max(1, Math.round(Ni * strikePos));
+    for (let i = 0; i < Ni; i++) buf[i] = noise[i] - noise[(i - k + Ni) % Ni];
+    const rho = Math.exp(-Ni / (sr * tau));
+    let prev = 0, apIn = 0, apOut = 0;
+    for (let n = 0, len = out.length; n < len; n++) {
+      const idx = n % Ni;
+      const x = buf[idx];
+      out[n] += x * amp;
+      const lp = a * x + (1 - a) * prev; prev = x;
+      const ap = C * lp + apIn - C * apOut; apIn = lp; apOut = ap;
+      buf[idx] = ap * rho;
+    }
+  }
 
-        const createOsc = (f, vol, type = "sine", detune = 0) => {
-          if (vol <= 0 || !f) return;
-          const osc = ctxAudio.createOscillator();
-          const g = ctxAudio.createGain();
-          osc.type = type;
-          osc.frequency.value = f;
-          osc.detune.value = detune;
-          g.gain.value = vol;
-          osc.connect(g).connect(envNode);
-          osc.start(startTime);
-          osc.stop(startTime + duration + 0.5);
-          activeOscillators.push(osc);
-        };
+  function renderBuffer(freq, kind) {
+    const sr = ctx.sampleRate;
+    const lead = kind === 'lead';
+    const tau = params.tau * (lead ? 1 : 0.75);
+    const a = lead ? params.bright : Math.max(0.5, params.bright - 0.1);
+    const len = Math.floor(sr * (lead ? 2.3 : 1.8));
+    const out = new Float32Array(len);
+    const rnd = mulberry32(Math.floor(freq * 1000) + (lead ? 7 : 3));
+    // 旋律音三根弦、伴奏两根弦：同一音符内的轻微失谐造成扬琴特有的闪烁/合唱感
+    const cents = lead ? TIMBRE.detune : [TIMBRE.detune[0] * 0.7, TIMBRE.detune[2] * 0.7];
+    cents.forEach((c, i) => {
+      addString(out, freq * Math.pow(2, c / 1200), sr, tau, a, (lead ? 0.12 : 0.18) + 0.01 * i, rnd, 1 / cents.length);
+    });
+    // 木槌敲击瞬态：短促、带一点木质“叮”感 (轻度低通，不刺耳)
+    const tickLen = Math.floor(sr * 0.005);
+    let tl = 0;
+    for (let i = 0; i < tickLen; i++) { tl += 0.55 * ((rnd() * 2 - 1) - tl); out[i] += tl * (1 - i / tickLen) * (lead ? TIMBRE.tick : TIMBRE.tick * 0.4); }
+    // 只做一级温和低通，去掉最尖的嘶嘶声，保留明亮的金属泛音
+    const fc = lead ? TIMBRE.leadCut : TIMBRE.softCut;
+    const al = 1 - Math.exp(-2 * Math.PI * fc / sr);
+    { let y = 0; for (let i = 0; i < len; i++) { y += al * (out[i] - y); out[i] = y; } }
+    let peak = 0;
+    for (let i = 0; i < len; i++) { const v = Math.abs(out[i]); if (v > peak) peak = v; }
+    const g = 0.9 / (peak || 1);
+    const buf = ctx.createBuffer(1, len, sr);
+    const ch = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) ch[i] = out[i] * g;
+    const fade = Math.floor(sr * 0.05);
+    for (let i = 0; i < fade; i++) ch[len - 1 - i] *= i / fade;
+    return buf;
+  }
 
-        // 基频与微失谐双音轨
-        createOsc(freq, SYNTH_CONFIG.volFund);
-        createOsc(
-          freq,
-          SYNTH_CONFIG.volFund * 0.45,
-          "sine",
-          SYNTH_CONFIG.detuneCents
-        );
+  function getBuffer(freq, kind) {
+    const key = kind + '|' + freq.toFixed(2) + '|' + params.tau + '|' + params.bright;
+    let b = bufCache.get(key);
+    if (!b) { b = renderBuffer(freq, kind); bufCache.set(key, b); }
+    return b;
+  }
 
-        // 高音区适度收敛泛音，中低音区保持丰满
-        const overtoneDamp = freq > 700 ? 0.4 : 1.0;
-        SYNTH_CONFIG.overtones.forEach((ot) => {
-          createOsc(freq * ot.ratio, ot.vol * overtoneDamp);
+  // 柔和的厅堂混响脉冲响应：指数衰减 + 随时间变暗的立体声噪声
+  function makeIR(c, secs) {
+    const sr = c.sampleRate, len = Math.floor(sr * secs), pre = Math.floor(sr * 0.012);
+    const ir = c.createBuffer(2, len, sr);
+    for (let k = 0; k < 2; k++) {
+      const d = ir.getChannelData(k), rnd = mulberry32(1234 + k * 77);
+      let y = 0;
+      for (let i = pre; i < len; i++) {
+        const t = (i - pre) / sr;
+        const al = 0.45 * Math.exp(-t * 1.3) + 0.05;
+        y += al * ((rnd() * 2 - 1) - y);
+        d[i] = y * Math.exp(-t * 4.0) * Math.min(1, (i - pre) / (sr * 0.004));
+      }
+    }
+    return ir;
+  }
+
+  function ensureAudio() {
+    if (!ctx) {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return null;
+      ctx = new AC();
+      const comp = ctx.createDynamicsCompressor();
+      comp.threshold.value = -18; comp.knee.value = 24; comp.ratio.value = 3; comp.attack.value = 0.006; comp.release.value = 0.22;
+      const master = ctx.createGain(); master.gain.value = 0.78;
+      // 去除次低频堆积 + 削掉 250Hz 附近的“嗡”和 3kHz 附近的“刺”，再整体柔化高频
+      const hp = ctx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 140; hp.Q.value = 0.7;
+      const mud = ctx.createBiquadFilter(); mud.type = 'peaking'; mud.frequency.value = 260; mud.Q.value = 0.9; mud.gain.value = -3;
+      const harsh = ctx.createBiquadFilter(); harsh.type = 'peaking'; harsh.frequency.value = 2800; harsh.Q.value = 1.6; harsh.gain.value = -2;
+      const top = ctx.createBiquadFilter(); top.type = 'lowpass'; top.frequency.value = 9000; top.Q.value = 0.5;
+      dry = ctx.createGain(); dry.gain.value = 0.95;
+      dry.connect(master);
+      // 用卷积混响代替原先两条短延迟交叉反馈 (后者会产生梳状滤波的金属嗡鸣)
+      echoSend = ctx.createGain(); echoSend.gain.value = params.echo;
+      const rev = ctx.createConvolver(); rev.buffer = makeIR(ctx, 1.7);
+      const revOut = ctx.createGain(); revOut.gain.value = 1.0;
+      echoSend.connect(rev); rev.connect(revOut); revOut.connect(master);
+      master.connect(hp); hp.connect(mud); mud.connect(harsh); harsh.connect(top); top.connect(comp); comp.connect(ctx.destination);
+    }
+    if (ctx.state === 'suspended') ctx.resume().catch(() => {});
+    return ctx;
+  }
+
+  function setParams(p) {
+    Object.assign(params, p);
+    if (echoSend) echoSend.gain.value = params.echo;
+  }
+
+  function playNote(ev, when) {
+    const lead = ev.role === 'melody';
+    const buf = getBuffer(ev.freq, lead ? 'lead' : 'soft');
+    const src = ctx.createBufferSource(); src.buffer = buf;
+    const g = ctx.createGain();
+    const dur = ev.dur * eighth;
+    const rel = lead ? 0.6 : 0.45;
+    g.gain.setValueAtTime(0.0001, when);
+    g.gain.linearRampToValueAtTime(ev.vel, when + 0.003);
+    g.gain.setValueAtTime(ev.vel, when + Math.max(dur, 0.01));
+    g.gain.exponentialRampToValueAtTime(0.001, when + Math.max(dur, 0.01) + rel);
+    src.connect(g); g.connect(dry); g.connect(echoSend);
+    src.start(when);
+    src.stop(when + dur + rel + 0.05);
+    const entry = { src, g };
+    active.add(entry);
+    src.onended = () => active.delete(entry);
+  }
+
+  function tick() {
+    if (!playing || !ctx) return;
+    const now = ctx.currentTime;
+    const horizon = now + 0.25;
+    while (qi < queue.length) {
+      const ev = queue[qi];
+      const t = t0 + ev.beat * eighth;
+      if (t > horizon) break;
+      if (t >= now - 0.05) playNote(ev, Math.max(now, t));
+      qi++;
+    }
+    if (qi >= queue.length && now >= t0 + total * eighth + 0.3) {
+      if (loop) { if (loopQ) { queue = loopQ; total = loopTotal; } t0 = now + 0.05; qi = 0; }
+      else { const cb = onEnd; stop(); if (cb) cb(); }
+    }
+  }
+
+  function stop() {
+    playing = false;
+    if (timer) { clearInterval(timer); timer = null; }
+    queue = []; qi = 0;
+    if (ctx) {
+      const now = ctx.currentTime;
+      active.forEach(({ src, g }) => {
+        try { g.gain.cancelScheduledValues(now); g.gain.setTargetAtTime(0.0001, now, 0.02); src.stop(now + 0.1); } catch (e) {}
+      });
+    }
+    active.clear();
+  }
+
+  function start(opts) {
+    opts = opts || {};
+    ensureAudio();
+    if (!ctx) return null;
+    stop();
+    eighth = 60 / ((opts.bpm || 100) * 3);
+    loop = opts.loop !== false;
+    onEnd = opts.onEnd || null;
+    const arr = buildArrangement({ intro: !!opts.intro });
+    total = arr.total;
+    let evs = arr.melody.map(([f, b, d], i) => ({ freq: f, beat: b, dur: d, vel: 0.9, role: 'melody', intro: i < arr.introMel }));
+    if (opts.chords !== false) {
+      evs = evs.concat(arr.accomp.map(([f, b, d, v], i) => ({ freq: f, beat: b, dur: d, vel: (v || 0.5) * 0.75, role: 'accomp', intro: i < arr.introAcc })));
+    }
+    evs.sort((a, b) => a.beat - b.beat);
+    queue = evs;
+    // 前奏只在第一遍播放，循环时直接回到主歌
+    loopQ = null; loopTotal = total;
+    if (arr.introLen > 0) {
+      loopQ = evs.filter(e => !e.intro).map(e => ({ ...e, beat: e.beat - arr.introLen }));
+      loopTotal = total - arr.introLen;
+    }
+    const startAt = opts.startAt || 0;
+    qi = Math.max(0, queue.findIndex(e => e.beat >= startAt));
+    // 预渲染所有用到的音高 (只渲染一次，播放时零开销)
+    queue.forEach(e => getBuffer(e.freq, e.role === 'melody' ? 'lead' : 'soft'));
+    playing = true;
+    const go = () => {
+      if (!playing) return;
+      t0 = ctx.currentTime + 0.08 - startAt * eighth;
+      tick();
+      timer = setInterval(tick, 30);
+    };
+    if (ctx.state === 'suspended') ctx.resume().then(go).catch(go); else go();
+    return arr;
+  }
+
+  return {
+    hz, params, ensureAudio, setParams, start, stop,
+    isPlaying: () => playing,
+    getPos: () => (playing && ctx) ? (ctx.currentTime - t0) / eighth : -1,
+    getCtx: () => ctx
+  };
+})();
+
+    let ctxAudio = null;
+    let isSongPlaying = false;
+    function ensureAudio() { ctxAudio = Engine.ensureAudio(); return ctxAudio; }
+    function stopSong() { Engine.stop(); isSongPlaying = false; updateMusicToggleLabel(); }
+    function playSong() {
+      if (!ensureAudio()) return;
+      stopSong();
+      Engine.setParams({ tau: 1.7, bright: 0.64, echo: 0.24 });
+      Engine.start({ bpm: 100, loop: true, intro: true, chords: true });
+      isSongPlaying = true;
+      updateMusicToggleLabel();
+    }
+
+    function playLighterSpark() {
+      ensureAudio();
+      if (!ctxAudio) return;
+      const now = ctxAudio.currentTime;
+      const len = Math.floor(ctxAudio.sampleRate * 0.22);
+      const buf = ctxAudio.createBuffer(1, len, ctxAudio.sampleRate);
+      const ch = buf.getChannelData(0);
+      for (let i = 0; i < len; i++) {
+        const decay = i < len * 0.12 ? 1 : Math.exp(-(i - len * 0.12) / (len * 0.24));
+        ch[i] = (Math.random() * 2 - 1) * decay;
+      }
+      const src = ctxAudio.createBufferSource();
+      src.buffer = buf;
+
+      const bp = ctxAudio.createBiquadFilter();
+      bp.type = "bandpass";
+      bp.frequency.setValueAtTime(3200, now);
+      bp.frequency.exponentialRampToValueAtTime(880, now + 0.2);
+
+      const g = ctxAudio.createGain();
+      g.gain.setValueAtTime(0.24, now);
+      g.gain.exponentialRampToValueAtTime(0.008, now + 0.21);
+
+      src.connect(bp);
+      bp.connect(g);
+      g.connect(ctxAudio.destination);
+      src.start(now);
+    }
+
+    function updateMusicToggleLabel() {
+      const btn = document.getElementById("btn-music-toggle");
+      if (btn) btn.textContent = isSongPlaying ? "❚❚ Pause Tavalodet" : "▶ Play Tavalodet";
+    }
+
+    /* =========================================================================
+       2. AMBIENT SKY STARDUST CANVAS (BREATHING BACKGROUND)
+    ========================================================================= */
+    const skyCanvas = document.getElementById("sky-canvas");
+    const skyCtx = skyCanvas.getContext("2d");
+    let skyParticles = [];
+    let skyDim = 1.0;
+
+    function resizeSky() {
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      skyCanvas.width = window.innerWidth * dpr;
+      skyCanvas.height = window.innerHeight * dpr;
+      skyCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      const count = window.innerWidth < 640 ? 60 : 95;
+      skyParticles = Array.from({ length: count }, () => ({
+        x: Math.random() * window.innerWidth,
+        y: Math.random() * window.innerHeight,
+        r: Math.random() * 1.4 + 0.35,
+        vy: Math.random() * 0.16 + 0.04,
+        phase: Math.random() * Math.PI * 2,
+        isBlue: Math.random() < 0.38
+      }));
+    }
+    window.addEventListener("resize", resizeSky);
+    resizeSky();
+
+    function renderSky(t) {
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      skyCtx.clearRect(0, 0, w, h);
+      for (const p of skyParticles) {
+        p.y -= p.vy;
+        if (p.y < -8) { p.y = h + 8; p.x = Math.random() * w; }
+        const breath = 0.28 + 0.36 * Math.sin(t * 0.0012 + p.phase);
+        skyCtx.fillStyle = p.isBlue
+          ? `rgba(127, 146, 176, ${(breath * skyDim).toFixed(3)})`
+          : `rgba(216, 200, 176, ${(breath * skyDim).toFixed(3)})`;
+        skyCtx.beginPath();
+        skyCtx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        skyCtx.fill();
+      }
+      requestAnimationFrame(renderSky);
+    }
+    requestAnimationFrame(renderSky);
+
+    /* =========================================================================
+       3. ACT NAVIGATION & TOAST WHISPERS
+    ========================================================================= */
+    let currentAct = 1;
+    let toastTimer = null;
+
+    function showToast(msg) {
+      const el = document.getElementById("whisper-toast");
+      el.textContent = msg;
+      el.classList.add("show");
+      if (toastTimer) clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => el.classList.remove("show"), 3600);
+    }
+
+    function goAct(n) {
+      currentAct = n;
+      document.querySelectorAll(".act").forEach((el, idx) => {
+        el.classList.toggle("active", idx + 1 === n);
+      });
+      skyDim = n === 3 ? 0.45 : 1.0;
+
+      if (n === 2) {
+        resizeCakeCanvas();
+      }
+      if (n === 3) {
+        revealLetterLines();
+      }
+    }
+
+    function revealLetterLines() {
+      const lines = document.querySelectorAll("#letter-body .letter-line");
+      lines.forEach((line, idx) => {
+        setTimeout(() => line.classList.add("shown"), 220 + idx * 320);
+      });
+    }
+
+    // Act I -> Act II (Tap, click, scroll, or swipe to enter — unlocks mobile audio!)
+    const act1 = document.getElementById("act-1");
+    let entered = false;
+    let touchStartY = null;
+    function enterFromAct1() {
+      if (entered || currentAct !== 1) return;
+      entered = true;
+      ensureAudio();
+      playLighterSpark();
+      goAct(2);
+    }
+    act1.addEventListener("click", enterFromAct1);
+    act1.addEventListener("wheel", (e) => {
+      if (e.deltaY > 12) enterFromAct1();
+    }, { passive: true });
+    act1.addEventListener("touchstart", (e) => {
+      if (e.touches && e.touches[0]) touchStartY = e.touches[0].clientY;
+    }, { passive: true });
+    act1.addEventListener("touchend", (e) => {
+      if (touchStartY !== null && e.changedTouches && e.changedTouches[0]) {
+        if (touchStartY - e.changedTouches[0].clientY > 24) enterFromAct1();
+      }
+      touchStartY = null;
+    }, { passive: true });
+    act1.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") enterFromAct1();
+    });
+
+    /* =========================================================================
+       4. ACT II: 3-TIER ILLUSTRATED CAKE, 19 IN-BOUNDS CANDLES & STEREO WIND
+    ========================================================================= */
+    const cakeCanvas = document.getElementById("cake-canvas");
+    const cCtx = cakeCanvas.getContext("2d");
+    let cw = 500, ch = 380;
+
+    // All 19 candles mathematically planted INSIDE their respective tier top ellipses:
+    // Tier 3 (Top): 3 candles | Tier 2 (Middle): 6 candles | Tier 1 (Bottom): 10 candles = 19
+    const candles = [];
+    // Top tier (3 candles)
+    for (let i = 0; i < 3; i++) {
+      const a = (i / 3) * Math.PI * 2 - Math.PI / 2;
+      candles.push({ tier: 3, ang: a, rx: Math.cos(a) * 0.62, ry: Math.sin(a) * 0.56, h: 34, scale: 0.90 });
+    }
+    // Middle tier shelf (6 candles on front/side arc so none are hidden behind top tier)
+    for (let i = 0; i < 6; i++) {
+      const a = -0.25 * Math.PI + (i / 5) * (1.5 * Math.PI);
+      candles.push({ tier: 2, ang: a, rx: Math.cos(a) * 0.80, ry: Math.sin(a) * 0.72, h: 36, scale: 0.95 });
+    }
+    // Bottom tier shelf (10 candles gracefully encircling the visible rim)
+    for (let i = 0; i < 10; i++) {
+      const a = -0.18 * Math.PI + (i / 9) * (1.36 * Math.PI);
+      candles.push({ tier: 1, ang: a, rx: Math.cos(a) * 0.84, ry: Math.sin(a) * 0.76, h: 38, scale: 1.0 });
+    }
+    candles.forEach((c, idx) => {
+      c.id = idx;
+      c.lit = true;
+      c.health = 1.0;
+      c.tilt = 0;
+      c.x = 0;
+      c.yTop = 0;
+      c.phase = Math.random() * Math.PI * 2;
+    });
+
+    const smokeWisps = [];
+    const sparks = [];
+    let pinkFlowerHitBox = { x: 0, y: 0, r: 20 };
+    let plateHitBox = { x: 0, y: 0, rx: 160, ry: 26 };
+    let finaleTriggered = false;
+    let isBlowingNow = false;
+
+    function resizeCakeCanvas() {
+      const rect = cakeCanvas.parentElement.getBoundingClientRect();
+      if (!rect.width || !rect.height) return;
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      cw = rect.width;
+      ch = rect.height;
+      cakeCanvas.width = cw * dpr;
+      cakeCanvas.height = ch * dpr;
+      cCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+    window.addEventListener("resize", resizeCakeCanvas);
+    resizeCakeCanvas();
+
+    function spawnSmoke(x, y) {
+      for (let k = 0; k < 6; k++) {
+        smokeWisps.push({
+          x: x + (Math.random() - 0.5) * 4,
+          y: y - 4,
+          vx: 0.2 + Math.random() * 0.45,
+          vy: -(0.65 + Math.random() * 0.75),
+          r: 3 + Math.random() * 4.5,
+          life: 1.0,
+          wobble: Math.random() * Math.PI * 2
         });
-
-        // 针对低频补充温和的倍频，保证在手机与轻薄本小扬声器上清晰呈现低音
-        if (isBass && freq < 200) {
-          createOsc(freq * 2, 0.16, "sine");
-          createOsc(freq * 3, 0.04, "sine");
-        }
       }
+    }
 
-      function playAllParts() {
-        if (ctxAudio.state === "suspended") ctxAudio.resume();
-
-        // 彻底阻断旧线程残留
-        activeOscillators.forEach((osc) => {
-          try {
-            osc.stop();
-          } catch (e) {}
+    function spawnSparks(x, y) {
+      for (let k = 0; k < 4; k++) {
+        sparks.push({
+          x, y,
+          vx: (Math.random() - 0.5) * 1.8,
+          vy: -0.8 - Math.random() * 1.6,
+          life: 1.0
         });
-        activeOscillators = [];
-
-        const beatLen = 0.68;
-        let now = ctxAudio.currentTime + 0.2;
-
-        melody.forEach(([f, b]) => playEngineNote(f, now + b * beatLen, false));
-
-        chords.forEach(([notes, b]) => {
-          notes.forEach((f, i) => {
-            let rollDelay = i * 0.055; // 清脆自然的琶音滚音
-            playEngineNote(f, now + b * beatLen + rollDelay, true);
-          });
-        });
-
-        loopTimer = setTimeout(playAllParts, 24 * beatLen * 1000 + 1500);
       }
+    }
 
-      /* ======================= Canvas 初始化 ======================= */
-      const canvas = document.getElementById("c");
-      const ctx = canvas.getContext("2d");
-      function resize() {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
+    function updateCandleCountUI() {
+      const lit = candles.filter(c => c.lit).length;
+      document.getElementById("candle-counter").textContent = `${lit} / 19 Candles Lit`;
+      if (lit === 0 && !finaleTriggered) {
+        finaleTriggered = true;
+        document.getElementById("ritual-whisper").textContent = "Wish locked in…";
+        stopMic();
+        setTimeout(() => {
+          playSong();
+          goAct(3);
+        }, 950);
       }
-      resize();
-      window.onresize = resize;
+    }
 
-      /* ======================= 草莓几何重构 ======================= */
-      function drawStrawberry(x, y) {
-        ctx.save();
-        ctx.translate(x, y);
+    function relightAll19() {
+      finaleTriggered = false;
+      isBlowingNow = false;
+      playLighterSpark();
+      document.getElementById("ritual-whisper").textContent = "Blow across your microphone, or hold the button below.";
+      candles.forEach((c, idx) => {
+        setTimeout(() => {
+          c.lit = true;
+          c.health = 1.0;
+          c.tilt = 0;
+          if (c.x && c.yTop) spawnSparks(c.x, c.yTop);
+          updateCandleCountUI();
+        }, idx * 42);
+      });
+    }
 
-        let grad = ctx.createLinearGradient(0, -15, 0, 5);
-        grad.addColorStop(0, "#ff2a4b");
-        grad.addColorStop(1, "#b30018");
-        ctx.fillStyle = grad;
+    // Supports stereo L/R bias: balance in [-1 (left), +1 (right)]
+    function applyWind(power, balance = 0) {
+      const litList = candles.filter(c => c.lit);
+      if (litList.length === 0) return;
+      isBlowingNow = true;
 
-        ctx.beginPath();
-        ctx.moveTo(-8, 5);
-        ctx.bezierCurveTo(-12, 5, -12, -5, 0, -15);
-        ctx.bezierCurveTo(12, -5, 12, 5, 8, 5);
-        ctx.closePath();
-        ctx.fill();
+      litList.forEach(c => {
+        // Horizontal norm position of candle [-1..+1]
+        const normX = (c.x - cw * 0.5) / Math.max(1, Math.min(cw * 0.42, 160));
+        // Directional gain: if blowing from left (balance < 0), left candles get stronger gust
+        const sideWeight = Math.max(0.28, 1.0 - balance * normX * 0.85);
+        const tiltDir = balance !== 0 ? (balance < 0 ? 1 : -1) : 1;
 
-        ctx.fillStyle = "rgba(255, 210, 120, 0.85)";
-        const seedPositions = [
-          [-4, 2],
-          [4, 2],
-          [0, -1],
-          [-5, -4],
-          [5, -4],
-          [-2, -8],
-          [2, -8],
-          [0, -11],
-        ];
-        seedPositions.forEach((pos) => {
-          ctx.beginPath();
-          ctx.arc(pos[0], pos[1], 0.8, 0, Math.PI * 2);
-          ctx.fill();
-        });
+        c.tilt = Math.max(-0.82, Math.min(0.82, c.tilt * 0.55 + tiltDir * power * sideWeight * 0.55));
+        c.health -= power * sideWeight * 0.036 * (0.75 + Math.random() * 0.5);
 
-        ctx.fillStyle = "#2d8a4e";
-        ctx.beginPath();
-        ctx.moveTo(0, 5);
-        ctx.quadraticCurveTo(-10, 8, -12, 3);
-        ctx.quadraticCurveTo(-6, 3, 0, 5);
-        ctx.moveTo(0, 5);
-        ctx.quadraticCurveTo(10, 8, 12, 3);
-        ctx.quadraticCurveTo(6, 3, 0, 5);
-        ctx.moveTo(0, 5);
-        ctx.quadraticCurveTo(0, 10, -3, 12);
-        ctx.quadraticCurveTo(2, 8, 0, 5);
-        ctx.fill();
-
-        ctx.restore();
-      }
-
-      /* ======================= 生日蛋糕与烛光 ======================= */
-      function drawCake() {
-        const cx = canvas.width / 2;
-        const cy = canvas.height * 0.72;
-
-        ctx.save();
-        ctx.globalCompositeOperation = "source-over";
-        ctx.translate(cx, cy);
-
-        // ---------- 一体化平滑高脚托盘 ----------
-        // 地面柔和阴影
-        ctx.fillStyle = "rgba(0, 0, 0, 0.22)";
-        ctx.beginPath();
-        ctx.ellipse(0, 77, 75, 5, 0, 0, Math.PI * 2);
-        ctx.fill();
-
-        // 瓷质渐变一体化托盘主体
-        let standGrad = ctx.createLinearGradient(-150, 0, 150, 0);
-        standGrad.addColorStop(0, "#d8dae2");
-        standGrad.addColorStop(0.3, "#f6f7fb");
-        standGrad.addColorStop(0.7, "#ffffff");
-        standGrad.addColorStop(1, "#cfd1dc");
-        ctx.fillStyle = standGrad;
-
-        ctx.beginPath();
-        ctx.moveTo(-150, 48);
-        ctx.quadraticCurveTo(-152, 54, -135, 55);
-        ctx.bezierCurveTo(-75, 56, -32, 58, -22, 66);
-        ctx.quadraticCurveTo(-24, 72, -55, 75);
-        ctx.lineTo(-55, 77);
-        ctx.quadraticCurveTo(0, 78, 55, 77);
-        ctx.lineTo(55, 75);
-        ctx.quadraticCurveTo(24, 72, 22, 66);
-        ctx.bezierCurveTo(32, 58, 75, 56, 135, 55);
-        ctx.quadraticCurveTo(152, 54, 150, 48);
-        ctx.lineTo(-150, 48); // 笔直封顶防走光
-        ctx.closePath();
-        ctx.fill();
-
-        // 盘面顶部反光边缘细线
-        ctx.strokeStyle = "rgba(255, 255, 255, 0.9)";
-        ctx.lineWidth = 1.5;
-        ctx.beginPath();
-        ctx.moveTo(-148, 49);
-        ctx.lineTo(148, 49);
-        ctx.stroke();
-
-        // ---------- 下层蛋糕主体 ----------
-        let cakeGrad1 = ctx.createLinearGradient(-120, 0, 120, 0);
-        cakeGrad1.addColorStop(0, "#e8c8b7");
-        cakeGrad1.addColorStop(0.5, "#ffe4d6");
-        cakeGrad1.addColorStop(1, "#d6b5a3");
-        ctx.fillStyle = cakeGrad1;
-        ctx.beginPath();
-        // 宽度略微收窄，高度加深至底部 52，完美填补奶油球缝隙
-        ctx.roundRect(-115, -40, 230, 92, 15);
-        ctx.fill();
-
-        // ---------- 奶油圈边缘 ----------
-        ctx.fillStyle = "#ffcad4";
-        // 扩展循环区间为 7 个奶油球，完美包裹侧边
-        for (let i = -108; i <= 108; i += 36) {
-          ctx.beginPath();
-          ctx.ellipse(i, 40, 22, 14, 0, 0, Math.PI * 2);
-          ctx.fill();
-        }
-
-        // ---------- 上层蛋糕主体 ----------
-        let cakeGrad2 = ctx.createLinearGradient(-90, 0, 90, 0);
-        cakeGrad2.addColorStop(0, "#ffe0cb");
-        cakeGrad2.addColorStop(0.5, "#fff2e8");
-        cakeGrad2.addColorStop(1, "#e6ccba");
-        ctx.fillStyle = cakeGrad2;
-        ctx.beginPath();
-        ctx.roundRect(-90, -85, 180, 60, 20);
-        ctx.fill();
-
-        // 蜡烛本体
-        let candleGrad = ctx.createLinearGradient(-5, 0, 5, 0);
-        candleGrad.addColorStop(0, "#eee");
-        candleGrad.addColorStop(0.5, "#fff");
-        candleGrad.addColorStop(1, "#ccc");
-        ctx.fillStyle = candleGrad;
-        ctx.fillRect(-5, -150, 10, 60);
-
-        ctx.fillStyle = "#222";
-        ctx.fillRect(-1, -154, 2, 4);
-
-        [-75, -38, 0, 38, 75].forEach((x) => {
-          drawStrawberry(x, -90);
-        });
-
-        if (candlesLit) {
-          let waver = (Math.random() - 0.5) * 0.8;
-          let flicker = Math.random() * 0.15 + 0.95;
-
-          ctx.save();
-          ctx.translate(waver, -155);
-
-          ctx.shadowBlur = 12;
-          ctx.shadowColor = "rgba(255, 180, 80, 0.9)";
-          ctx.globalCompositeOperation = "lighter";
-
-          let ambientGlow = ctx.createRadialGradient(
-            0,
-            -6,
-            0,
-            0,
-            -6,
-            40 * flicker
-          );
-          ambientGlow.addColorStop(0, "rgba(255, 150, 20, 0.4)");
-          ambientGlow.addColorStop(1, "rgba(255, 80, 0, 0)");
-          ctx.fillStyle = ambientGlow;
-          ctx.beginPath();
-          ctx.arc(0, -6, 40 * flicker, 0, Math.PI * 2);
-          ctx.fill();
-
-          let grd = ctx.createRadialGradient(
-            0,
-            -6 * flicker,
-            0.5,
-            0,
-            -6 * flicker,
-            10 * flicker
-          );
-          grd.addColorStop(0, "rgba(255, 255, 255, 1)");
-          grd.addColorStop(0.4, "rgba(255, 220, 60, 0.9)");
-          grd.addColorStop(1, "rgba(255, 60, 0, 0)");
-
-          ctx.fillStyle = grd;
-          ctx.beginPath();
-          ctx.moveTo(0, 0);
-          ctx.quadraticCurveTo(5 * flicker, -8 * flicker, 0, -20 * flicker);
-          ctx.quadraticCurveTo(-5 * flicker, -8 * flicker, 0, 0);
-          ctx.fill();
-
-          ctx.restore();
-        }
-        ctx.restore();
-      }
-
-      /* ======================= Canvas 文本显示 ======================= */
-      let tipOpacity = 1;
-      function drawText() {
-        ctx.save();
-        ctx.globalCompositeOperation = "source-over";
-        if (!candlesLit) {
-          ctx.fillStyle = "white";
-          ctx.font = "48px 'Cooper Black', sans-serif";
-          ctx.textAlign = "center";
-          ctx.fillText(
-            "Happy Birthday Zari",
-            canvas.width / 2,
-            canvas.height * 0.25
-          );
-
-          ctx.fillStyle = `rgba(255,255,255,${tipOpacity})`;
-          ctx.font = "20px 'Times New Roman', serif";
-          ctx.fillText(
-            "click to light on candles",
-            canvas.width / 2,
-            canvas.height * 0.88
-          );
-        }
-        ctx.restore();
-      }
-
-      /* ======================= 点击交互 ======================= */
-      document.body.addEventListener("click", () => {
-        if (!candlesLit) {
-          candlesLit = true;
-          initAudio();
-
-          let fade = setInterval(() => {
-            tipOpacity -= 0.05;
-            if (tipOpacity <= 0) clearInterval(fade);
-          }, 40);
-
-          setTimeout(() => {
-            document.getElementById("letter-box").classList.add("visible");
-          }, 1800);
+        if (c.health <= 0.12) {
+          c.lit = false;
+          c.health = 0;
+          spawnSmoke(c.x, c.yTop);
         }
       });
+      updateCandleCountUI();
+    }
 
-      /* ======================= 原理方程数学映射 ======================= */
-      let tLorenz = 0;
+    function drawTier(cx, topY, rx, ry, height, tierColorA, tierColorB, creamTopA, creamTopB, dripSeed) {
+      const botY = topY + height;
+      // Cake body cylinder
+      const bGrad = cCtx.createLinearGradient(cx - rx, topY, cx + rx, topY);
+      bGrad.addColorStop(0, tierColorA);
+      bGrad.addColorStop(0.45, tierColorB);
+      bGrad.addColorStop(1, tierColorA);
+      cCtx.beginPath();
+      cCtx.moveTo(cx - rx, topY);
+      cCtx.lineTo(cx - rx, botY);
+      cCtx.ellipse(cx, botY, rx, ry, 0, Math.PI, 0, true);
+      cCtx.lineTo(cx + rx, topY);
+      cCtx.closePath();
+      cCtx.fillStyle = bGrad;
+      cCtx.fill();
 
-      const pastelColors = [
-        "rgba(255, 185, 205, 0.7)",
-        "rgba(185, 210, 255, 0.7)",
-        "rgba(215, 195, 255, 0.7)",
-        "rgba(255, 245, 210, 0.7)",
-      ];
+      // Subtle warm cream frosting drips along the front edge
+      cCtx.beginPath();
+      cCtx.moveTo(cx - rx, topY);
+      const steps = 12;
+      for (let s = 0; s <= steps; s++) {
+        const ang = Math.PI - (s / steps) * Math.PI; // front half: pi -> 0
+        const px = cx + Math.cos(ang) * rx;
+        const drip = (s === 0 || s === steps) ? 0 : (7 + Math.sin(s * 2.7 + dripSeed) * 6 + Math.cos(s * 1.4) * 3);
+        const py = topY + Math.sin(ang) * ry + drip;
+        cCtx.lineTo(px, py);
+      }
+      cCtx.ellipse(cx, topY, rx, ry, 0, 0, Math.PI, true);
+      cCtx.closePath();
+      const dripGrad = cCtx.createLinearGradient(cx, topY, cx, topY + ry + 14);
+      dripGrad.addColorStop(0, creamTopA);
+      dripGrad.addColorStop(1, creamTopB);
+      cCtx.fillStyle = dripGrad;
+      cCtx.fill();
 
-      function drawLorenzData() {
-        ctx.save();
-        ctx.translate(canvas.width / 2, canvas.height / 2 - 50);
-        ctx.scale(2.2, 2.2);
-        ctx.globalCompositeOperation = "lighter";
+      // Top icing ellipse
+      const tGrad = cCtx.createRadialGradient(cx, topY - 4, 6, cx, topY, rx);
+      tGrad.addColorStop(0, creamTopA);
+      tGrad.addColorStop(1, creamTopB);
+      cCtx.beginPath();
+      cCtx.ellipse(cx, topY, rx, ry, 0, 0, Math.PI * 2);
+      cCtx.fillStyle = tGrad;
+      cCtx.fill();
+      cCtx.strokeStyle = "rgba(232, 212, 180, 0.35)";
+      cCtx.lineWidth = 1;
+      cCtx.stroke();
+    }
 
-        let a = (y, i) => {
-          let d =
-            Math.hypot(
-              (k =
-                (y < 9 ? 4 + Math.sin(y ** 8) * 9 : y / 4 + Math.cos(y)) *
-                Math.cos(i)),
-              (e = y / 6 - 13)
-            ) +
-            Math.cos(i / 1199) / 2;
-          let q = ((y * k) / d) * (2 + Math.sin(d * 2 + y - tLorenz * 16)) + 79;
-          let c = d / 6 - tLorenz + (i & 5);
-          let px = q * Math.cos(c);
-          let py = ((q * d) / 9) * Math.sin(c + (i % 2) * 7);
+    function drawSingleCandle(c, t) {
+      const h = c.h * c.scale;
+      const w = 4.6 * c.scale;
+      const x = c.x;
+      const yBase = c.yBase;
+      c.yTop = yBase - h;
 
-          let branch = i & 5;
-          let colorIdx =
-            branch === 0 ? 0 : branch === 1 ? 1 : branch === 4 ? 2 : 3;
+      // Candle wax body
+      const stickGrad = cCtx.createLinearGradient(x - w * 0.5, yBase - h, x + w * 0.5, yBase);
+      stickGrad.addColorStop(0, "#f5ede0");
+      stickGrad.addColorStop(1, "#9a8f80");
+      cCtx.fillStyle = stickGrad;
+      cCtx.beginPath();
+      cCtx.roundRect(x - w * 0.5, yBase - h, w, h, 2);
+      cCtx.fill();
 
-          ctx.fillStyle = pastelColors[colorIdx];
-          ctx.fillRect(px, py, 0.6, 0.6);
+      // Wick
+      cCtx.strokeStyle = "#332a22";
+      cCtx.lineWidth = 1.2;
+      cCtx.beginPath();
+      cCtx.moveTo(x, yBase - h);
+      cCtx.lineTo(x, yBase - h - 4);
+      cCtx.stroke();
+
+      if (c.lit) {
+        // Recover brightness smoothly back to 1.0 when not blowing!
+        if (!isBlowingNow && c.health < 1.0) {
+          c.health = Math.min(1.0, c.health + 0.038);
+        }
+        if (!isBlowingNow) {
+          c.tilt *= 0.86;
+        }
+
+        const flicker = Math.sin(t * 0.012 + c.phase) * 0.13 + Math.cos(t * 0.021 + c.phase) * 0.06;
+        const flameScale = Math.max(0.36, c.health) * (1 + flicker * 0.45) * c.scale;
+
+        cCtx.save();
+        cCtx.translate(x, yBase - h - 4);
+        cCtx.rotate(c.tilt + flicker * 0.22);
+
+        // Warm amber-orange low-exposure candlelight glow
+        cCtx.globalCompositeOperation = "lighter";
+        const halo = cCtx.createRadialGradient(0, -8 * flameScale, 1, 0, -8 * flameScale, 28 * flameScale);
+        halo.addColorStop(0, "rgba(255, 178, 68, 0.62)");
+        halo.addColorStop(0.45, "rgba(255, 126, 32, 0.24)");
+        halo.addColorStop(1, "rgba(255, 110, 20, 0)");
+        cCtx.fillStyle = halo;
+        cCtx.beginPath();
+        cCtx.arc(0, -8 * flameScale, 28 * flameScale, 0, Math.PI * 2);
+        cCtx.fill();
+
+        // Outer amber-orange flame teardrop
+        const fh = 19 * flameScale;
+        const fw = 5.6 * flameScale;
+        const fGrad = cCtx.createLinearGradient(0, 0, 0, -fh);
+        fGrad.addColorStop(0, "rgba(110, 150, 230, 0.85)");
+        fGrad.addColorStop(0.22, "rgba(255, 130, 30, 0.96)");
+        fGrad.addColorStop(0.65, "rgba(255, 195, 72, 0.96)");
+        fGrad.addColorStop(1, "rgba(255, 240, 175, 0.92)");
+        cCtx.fillStyle = fGrad;
+        cCtx.beginPath();
+        cCtx.moveTo(0, 0);
+        cCtx.bezierCurveTo(-fw, -fh * 0.35, -fw * 0.55, -fh * 0.82, 0, -fh);
+        cCtx.bezierCurveTo(fw * 0.55, -fh * 0.82, fw, -fh * 0.35, 0, 0);
+        cCtx.fill();
+
+        // Warm yellow-white inner core
+        cCtx.fillStyle = "rgba(255, 248, 210, 0.94)";
+        cCtx.beginPath();
+        cCtx.ellipse(0, -fh * 0.30, fw * 0.32, fh * 0.27, 0, 0, Math.PI * 2);
+        cCtx.fill();
+        cCtx.restore();
+      }
+    }
+
+    function drawCakeScene(t) {
+      if (currentAct === 2) {
+        cCtx.clearRect(0, 0, cw, ch);
+
+        const cx = cw * 0.5;
+        const baseY = ch * 0.78;
+        const wScale = Math.min(cw * 0.88, 390);
+        const litCount = candles.filter(c => c.lit).length;
+
+        // 1. Warm Amber Ambient Candlelight Pool
+        if (litCount > 0) {
+          const glowStrength = (litCount / 19) * 0.26;
+          const ambCy = baseY - 85;
+          const ambR = Math.max(40, Math.min(wScale * 0.92, cw * 0.5 - 2, ambCy - 2, ch - ambCy - 2));
+          const amb = cCtx.createRadialGradient(cx, baseY - 120, 14, cx, ambCy, ambR);
+          amb.addColorStop(0, `rgba(240, 200, 120, ${glowStrength})`);
+          amb.addColorStop(0.5, `rgba(200, 160, 96, ${glowStrength * 0.38})`);
+          amb.addColorStop(1, "rgba(200, 160, 96, 0)");
+          cCtx.fillStyle = amb;
+          cCtx.fillRect(0, 0, cw, ch);
+        }
+
+        // 2. Porcelain Cake Stand & Plate
+        const plateRx = wScale * 0.48;
+        const plateRy = 24;
+        plateHitBox = { x: cx, y: baseY, rx: plateRx, ry: plateRy };
+
+        // Pedestal stem
+        cCtx.fillStyle = "#171b2b";
+        cCtx.fillRect(cx - 22, baseY + 14, 44, 24);
+        cCtx.beginPath();
+        cCtx.ellipse(cx, baseY + 38, 52, 10, 0, 0, Math.PI * 2);
+        cCtx.fillStyle = "#1c2235";
+        cCtx.fill();
+
+        // Plate platter
+        cCtx.beginPath();
+        cCtx.ellipse(cx, baseY + 4, plateRx, plateRy, 0, 0, Math.PI * 2);
+        cCtx.fillStyle = "#101421";
+        cCtx.fill();
+        cCtx.beginPath();
+        cCtx.ellipse(cx, baseY, plateRx, plateRy, 0, 0, Math.PI * 2);
+        cCtx.fillStyle = "#1a2033";
+        cCtx.fill();
+        cCtx.strokeStyle = "rgba(216, 200, 176, 0.36)";
+        cCtx.lineWidth = 1.4;
+        cCtx.stroke();
+
+        // Tier dimensions
+        const t1 = { topY: baseY - 52, rx: wScale * 0.40, ry: 21, h: 48 };
+        const t2 = { topY: baseY - 96, rx: wScale * 0.28, ry: 16, h: 44 };
+        const t3 = { topY: baseY - 134, rx: wScale * 0.17, ry: 11, h: 38 };
+
+        // Compute exact (x, yBase) of every candle inside its tier ellipse
+        const tiers = { 1: t1, 2: t2, 3: t3 };
+        candles.forEach(c => {
+          const tr = tiers[c.tier];
+          c.x = cx + c.rx * tr.rx;
+          c.yBase = tr.topY + c.ry * tr.ry;
+        });
+
+        // Draw Tier 1 (Bottom) + Back candles of Tier 1
+        drawTier(cx, t1.topY, t1.rx, t1.ry, t1.h, "#221822", "#352432", "#dfd4c3", "#b8aa98", 1.0);
+        candles.filter(c => c.tier === 1 && c.yBase < t1.topY).sort((a,b) => a.yBase - b.yBase).forEach(c => drawSingleCandle(c, t));
+
+        // Draw Tier 2 (Middle) + Back candles of Tier 2 + Pink Sugar Flower
+        drawTier(cx, t2.topY, t2.rx, t2.ry, t2.h, "#281c28", "#3e2a3a", "#e6dccb", "#c2b3a0", 2.4);
+
+        // Delicate Pink Sugar Flower on front-right of Tier 2
+        const fx = cx + t2.rx * 0.65;
+        const fy = t2.topY + t2.ry * 0.55;
+        pinkFlowerHitBox = { x: fx, y: fy, r: 16 };
+        cCtx.save();
+        cCtx.translate(fx, fy);
+        for (let p = 0; p < 5; p++) {
+          cCtx.rotate((Math.PI * 2) / 5);
+          cCtx.beginPath();
+          cCtx.ellipse(4.8, 0, 5.0, 3.0, 0, 0, Math.PI * 2);
+          cCtx.fillStyle = "rgba(206, 122, 146, 0.85)";
+          cCtx.fill();
+        }
+        cCtx.beginPath();
+        cCtx.arc(0, 0, 2.4, 0, Math.PI * 2);
+        cCtx.fillStyle = "#f2dfbc";
+        cCtx.fill();
+        cCtx.restore();
+
+        // Draw Front candles of Tier 1
+        candles.filter(c => c.tier === 1 && c.yBase >= t1.topY).sort((a,b) => a.yBase - b.yBase).forEach(c => drawSingleCandle(c, t));
+        // Draw Back candles of Tier 2
+        candles.filter(c => c.tier === 2 && c.yBase < t2.topY).sort((a,b) => a.yBase - b.yBase).forEach(c => drawSingleCandle(c, t));
+
+        // Draw Tier 3 (Top) + Front candles of Tier 2 + All candles of Tier 3
+        drawTier(cx, t3.topY, t3.rx, t3.ry, t3.h, "#2f202e", "#473042", "#ede4d5", "#cbbca8", 3.8);
+        candles.filter(c => c.tier === 2 && c.yBase >= t2.topY).sort((a,b) => a.yBase - b.yBase).forEach(c => drawSingleCandle(c, t));
+        candles.filter(c => c.tier === 3).sort((a,b) => a.yBase - b.yBase).forEach(c => drawSingleCandle(c, t));
+
+        // 3. Rising Smoke Wisps
+        for (let i = smokeWisps.length - 1; i >= 0; i--) {
+          const s = smokeWisps[i];
+          s.x += s.vx + Math.sin(t * 0.005 + s.wobble) * 0.35;
+          s.y += s.vy;
+          s.r += 0.12;
+          s.life -= 0.012;
+          if (s.life <= 0) { smokeWisps.splice(i, 1); continue; }
+          cCtx.fillStyle = `rgba(184, 192, 210, ${(s.life * 0.22).toFixed(3)})`;
+          cCtx.beginPath();
+          cCtx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+          cCtx.fill();
+        }
+
+        // 4. Lighter Sparks
+        for (let i = sparks.length - 1; i >= 0; i--) {
+          const sp = sparks[i];
+          sp.x += sp.vx;
+          sp.y += sp.vy;
+          sp.vy += 0.08;
+          sp.life -= 0.045;
+          if (sp.life <= 0) { sparks.splice(i, 1); continue; }
+          cCtx.fillStyle = `rgba(255, 204, 110, ${sp.life.toFixed(3)})`;
+          cCtx.fillRect(sp.x, sp.y, 2, 2);
+        }
+      }
+      requestAnimationFrame(drawCakeScene);
+    }
+    requestAnimationFrame(drawCakeScene);
+
+    cakeCanvas.addEventListener("click", (e) => {
+      const rect = cakeCanvas.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      const dx = x - pinkFlowerHitBox.x;
+      const dy = y - pinkFlowerHitBox.y;
+      if (dx * dx + dy * dy <= pinkFlowerHitBox.r * pinkFlowerHitBox.r * 1.6) {
+        showToast("8 May · “i once tried a big pink flower on my cousin’s cake — i was sick for a week”");
+        return;
+      }
+      const px = (x - plateHitBox.x) / plateHitBox.rx;
+      const py = (y - plateHitBox.y) / plateHitBox.ry;
+      if (px * px + py * py <= 1.2) {
+        showToast("24 Aug · “i eat all anyways — the plate a lil hard to chew but it’s ok”");
+      }
+    });
+
+    /* =========================================================================
+       5. BLOWING INTERACTIONS (STEREO DUAL-MIC L/R + AIRFLOW-SPECIFIC DETECTOR + RECOVERY)
+    ========================================================================= */
+    let holdTimer = null;
+    const holdBtn = document.getElementById("btn-hold-blow");
+    const windBarWrap = document.getElementById("wind-bar-wrap");
+    const windBarFill = document.getElementById("wind-bar-fill");
+
+    function startHoldBlow(e) {
+      if (e) e.preventDefault();
+      ensureAudio();
+      if (candles.every(c => !c.lit)) relightAll19();
+      holdBtn.classList.add("active");
+      windBarWrap.classList.add("visible");
+      if (holdTimer) clearInterval(holdTimer);
+      holdTimer = setInterval(() => {
+        windBarFill.style.width = "85%";
+        applyWind(0.75, 0);
+        if (candles.every(c => !c.lit)) stopHoldBlow();
+      }, 75);
+    }
+
+    function stopHoldBlow() {
+      isBlowingNow = false;
+      holdBtn.classList.remove("active");
+      if (holdTimer) { clearInterval(holdTimer); holdTimer = null; }
+      if (!micListening) {
+        windBarFill.style.width = "0%";
+        windBarWrap.classList.remove("visible");
+      }
+    }
+
+    holdBtn.addEventListener("pointerdown", startHoldBlow);
+    holdBtn.addEventListener("contextmenu", (e) => e.preventDefault());
+    window.addEventListener("pointerup", stopHoldBlow);
+    window.addEventListener("pointercancel", stopHoldBlow);
+
+    let micStream = null;
+    let micListening = false;
+    const micBtn = document.getElementById("btn-mic-blow");
+
+    function stopMic() {
+      isBlowingNow = false;
+      micListening = false;
+      micBtn.classList.remove("active");
+      micBtn.textContent = "🎙️ Use Mic";
+      if (micStream) {
+        micStream.getTracks().forEach(tr => tr.stop());
+        micStream = null;
+      }
+      windBarFill.style.width = "0%";
+      windBarWrap.classList.remove("visible");
+    }
+
+/*BLOWDET-START*/
+    // ---- 吹气检测器 (纯计算，无 DOM)：只对"持续的宽带气流噪声"敏感，说话/音乐/拍手/键盘都不触发 ----
+    function createBlowDetector(sr) {
+      const N = 2048, H = N >> 1, binHz = sr / N;
+      const cfg = {
+        lowLo: 40, lowHi: 300, midLo: 400, midHi: 6000,
+        minFlat: 0.34,      // 频谱平坦度：气流噪声高，人声/音乐(谐波尖峰)低
+        maxPeriodic: 0.45,  // 基音周期性：人声(包括大喊削波后)有明显重复周期，吹气没有；超过则判为人声/乐音
+        minLowRatio: 0.20,  // 低频(40–300Hz)能量占比：吹气会冲击麦克风膜片产生低频隆隆声，"嘶"声和打字没有
+        maxCrest: 5.5,      // 波峰因数：拍手/敲击是尖脉冲，持续气流较平稳
+        levelK: 5, levelMin: 0.035,    // 必须明显高于自适应底噪，且有最低绝对音量 (避免轻微呼吸/小声说话)
+        holdOn: 12, holdMax: 40        // 需连续满足约 200ms 才算吹气 (rAF ≈ 60fps)
+      };
+      const kLo0 = Math.ceil(cfg.lowLo / binHz), kLo1 = Math.floor(cfg.lowHi / binHz);
+      const kMi0 = Math.ceil(cfg.midLo / binHz), kMi1 = Math.min(H - 1, Math.floor(cfg.midHi / binHz));
+      // FFT 预计算
+      const win = new Float32Array(N), cosT = new Float32Array(H), sinT = new Float32Array(H), rev = new Uint16Array(N);
+      for (let i = 0; i < N; i++) win[i] = 0.5 - 0.5 * Math.cos(2 * Math.PI * i / (N - 1));
+      for (let i = 0; i < H; i++) { cosT[i] = Math.cos(2 * Math.PI * i / N); sinT[i] = -Math.sin(2 * Math.PI * i / N); }
+      const bits = Math.log2(N);
+      for (let i = 0; i < N; i++) { let r = 0, x = i; for (let b = 0; b < bits; b++) { r = (r << 1) | (x & 1); x >>= 1; } rev[i] = r; }
+      const re = new Float32Array(N), im = new Float32Array(N), P = new Float32Array(H), pre = new Float64Array(H + 1);
+      const lagMin = Math.max(2, Math.floor(sr / 450)), lagMax = Math.min(N / 2 - 1, Math.floor(sr / 70));
+      function fft() {
+        for (let i = 0; i < N; i++) { const j = rev[i]; if (j > i) { let t = re[i]; re[i] = re[j]; re[j] = t; t = im[i]; im[i] = im[j]; im[j] = t; } }
+        for (let size = 2; size <= N; size <<= 1) {
+          const half = size >> 1, step = N / size;
+          for (let s = 0; s < N; s += size) {
+            for (let k = 0, t = 0; k < half; k++, t += step) {
+              const a = s + k, b = a + half;
+              const tr = re[b] * cosT[t] - im[b] * sinT[t], ti = re[b] * sinT[t] + im[b] * cosT[t];
+              re[b] = re[a] - tr; im[b] = im[a] - ti; re[a] += tr; im[a] += ti;
+            }
+          }
+        }
+      }
+      function analyze(x) {
+        let sum = 0, peak = 0;
+        for (let i = 0; i < N; i++) { const v = x[i]; sum += v * v; const a = v < 0 ? -v : v; if (a > peak) peak = a; }
+        const rms = Math.sqrt(sum / N);
+        if (rms < 1e-6) return { rms, crest: 0, flat: 0, lowRatio: 0, per: 0 };
+        for (let i = 0; i < N; i++) { re[i] = x[i] * win[i]; im[i] = 0; }
+        fft();
+        pre[0] = 0;
+        for (let k = 0; k < H; k++) { P[k] = re[k] * re[k] + im[k] * im[k]; pre[k + 1] = pre[k] + P[k]; }
+        let lowE = 0, midE = 0;
+        for (let k = kLo0; k <= kLo1; k++) lowE += P[k];
+        for (let k = kMi0; k <= kMi1; k++) midE += P[k];
+        // 平坦度：先除以局部包络 (±12 bin) 去掉整体频谱倾斜/共振峰，再看是否"尖峰化"
+        let lg = 0, cnt = 0;
+        for (let k = kMi0; k <= kMi1; k++) {
+          const a = Math.max(0, k - 12), b = Math.min(H - 1, k + 12);
+          const env = (pre[b + 1] - pre[a]) / (b - a + 1) + 1e-20;
+          lg += Math.log(Math.max(1e-3, P[k] / env)); cnt++;
+        }
+        // 自相关 (对功率谱做一次变换)：找"第一次过零之后"的最大峰值。人声有明显周期峰；
+        // 低通噪声/气流只会平滑衰减，没有周期峰。大声喊叫削波也不会消除周期性。
+        re[0] = P[0]; im[0] = 0;
+        for (let k = 1; k < H; k++) { re[k] = P[k]; re[N - k] = P[k]; im[k] = 0; im[N - k] = 0; }
+        re[H] = 0; im[H] = 0;
+        fft();
+        const r0 = re[0] + 1e-20;
+        let zc = 1; while (zc < lagMax && re[zc] > 0) zc++;
+        let per = 0;
+        if (zc < lagMax) { for (let t = Math.max(zc, lagMin >> 1); t <= lagMax; t++) { const v = re[t] / r0; if (v > per) per = v; } }
+        return { rms, crest: peak / rms, flat: Math.exp(lg / Math.max(1, cnt)), lowRatio: lowE / (lowE + midE + 1e-20), per };
+      }
+      let floorL = 0.002, floorR = 0.002, frames = 0, hold = 0, lvl = 0, stereoVotes = 0, bal = 0, quiet = 0;
+      const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+      const thrOf = f => Math.max(cfg.levelMin, f * cfg.levelK);
+      const isBlow = (F, fl) => F.rms > thrOf(fl) && F.flat > cfg.minFlat && F.lowRatio > cfg.minLowRatio && F.crest < cfg.maxCrest && F.per < cfg.maxPeriodic;
+
+      // l, rr: 最近 N 个时域采样 (Float32Array)；rr 为 null 表示单声道
+      function frame(l, rr) {
+        frames++;
+        const A = analyze(l), B = rr ? analyze(rr) : null;
+        // 立体声判定：左右声道相关性 < 0.99 才算真立体声 (很多"立体声"麦克风其实是左右一模一样的双单声道)
+        if (B && (A.rms > floorL * 2 || B.rms > floorR * 2) && A.rms > 0.004) {
+          let sl = 0, sr2 = 0, slr = 0;
+          for (let i = 0; i < N; i++) { sl += l[i] * l[i]; sr2 += rr[i] * rr[i]; slr += l[i] * rr[i]; }
+          const corr = slr / (Math.sqrt(sl * sr2) + 1e-12);
+          stereoVotes = clamp(stereoVotes + (corr < 0.99 ? 1 : -1), 0, 30);
+        }
+        const stereo = !!B && stereoVotes >= 8;
+
+        const okA = isBlow(A, floorL), okB = !!B && stereo && isBlow(B, floorR);
+        const ok = okA || okB;
+        hold = ok ? Math.min(cfg.holdMax, hold + 1) : Math.max(0, hold - 1);
+        const blow = hold >= cfg.holdOn;
+
+        // 底噪自适应：只在"不是吹气"时更新；下降快、上升慢，上限 0.04
+        if (!ok && hold === 0) {
+          const fast = frames < 24 ? 0.2 : 0.01;
+          floorL += (A.rms - floorL) * (A.rms < floorL ? 0.15 : (A.rms < floorL * 3 ? fast : 0));
+          if (B) floorR += (B.rms - floorR) * (B.rms < floorR ? 0.15 : (B.rms < floorR * 3 ? fast : 0));
+          floorL = clamp(floorL, 0.0005, 0.04); floorR = clamp(floorR, 0.0005, 0.04);
+        }
+
+        const rA = A.rms / thrOf(floorL), rB = B ? B.rms / thrOf(floorR) : 0;
+        const r = Math.max(rA, rB);
+        lvl += (r - lvl) * 0.35;
+        const power = clamp(0.25 + (lvl - 1) * 0.14, 0.25, 1.1);
+
+        // 左右方向：用两路"超出底噪的音量"之差，且只在吹气期间平滑更新
+        let balance = 0;
+        if (stereo && blow) {
+          const lv = Math.max(0, A.rms - floorL * 1.5), rv = Math.max(0, B.rms - floorR * 1.5);
+          const b = (rv - lv) / (rv + lv + 1e-6);
+          bal += (clamp(b * 1.6, -1, 1) - bal) * 0.25;
+          balance = Math.abs(bal) < 0.08 ? 0 : bal;
+        } else bal *= 0.8;
+
+        const loud = Math.max(A.rms, B ? B.rms : 0) > 0.02;
+        return {
+          blow, building: !blow && hold > 0, power, balance, stereo,
+          bar: blow ? clamp(Math.round(lvl * 30), 25, 100) : clamp(Math.round(Math.min(A.rms, 1) / thrOf(floorL) * 10), 0, 22),
+          notBlow: !ok && loud,       // 有声音但不像吹气 (人声/音乐/拍手)
+          dbg: { A, B, hold, floorL, floorR }
         };
-
-        for (let i = 20000; i--; ) a(i / 980, i);
-        tLorenz += Math.PI / 480;
-
-        ctx.restore();
       }
+      return { frame, cfg };
+    }
+/*BLOWDET-END*/
 
-      /* ======================= 主动画循环 ======================= */
-      function animate() {
-        ctx.fillStyle = "rgba(4, 4, 6, 0.35)";
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+    micBtn.addEventListener("click", async () => {
+      ensureAudio();
+      if (micListening) { stopMic(); return; }
+      if (candles.every(c => !c.lit)) relightAll19();
 
-        drawLorenzData();
-        drawCake();
-        drawText();
+      try {
+        micStream = await navigator.mediaDevices.getUserMedia({
+          audio: {
+            channelCount: { ideal: 2 },
+            echoCancellation: false,
+            noiseSuppression: false,
+            autoGainControl: false,
+            voiceIsolation: false
+          }
+        });
+        const src = ctxAudio.createMediaStreamSource(micStream);
+        const trackCh = (micStream.getAudioTracks()[0] && micStream.getAudioTracks()[0].getSettings().channelCount) || 1;
+        const channels = Math.max(src.channelCount || 1, trackCh);
 
-        requestAnimationFrame(animate);
+        // 时域采样 + 自己做频谱分析 (比 AnalyserNode 的字节频谱更适合区分"吹气"和"说话/音乐")
+        const analyserL = ctxAudio.createAnalyser();
+        const analyserR = ctxAudio.createAnalyser();
+        analyserL.fftSize = 2048;
+        analyserR.fftSize = 2048;
+
+        if (channels >= 2) {
+          const splitter = ctxAudio.createChannelSplitter(2);
+          src.connect(splitter);
+          splitter.connect(analyserL, 0);
+          splitter.connect(analyserR, 1);
+        } else {
+          src.connect(analyserL);
+        }
+
+        const bufL = new Float32Array(analyserL.fftSize);
+        const bufR = new Float32Array(analyserR.fftSize);
+        const det = createBlowDetector(ctxAudio.sampleRate);
+        micListening = true;
+        micBtn.classList.add("active");
+        micBtn.textContent = "🎙️ Listening…";
+        windBarWrap.classList.add("visible");
+
+        const whisperEl = document.getElementById("ritual-whisper");
+        let lastHint = "", stereoShown = false;
+        const say = (t) => { if (t !== lastHint) { lastHint = t; whisperEl.textContent = t; } };
+
+        function pollMic() {
+          if (!micListening) return;
+          analyserL.getFloatTimeDomainData(bufL);
+          if (channels >= 2) analyserR.getFloatTimeDomainData(bufR);
+          const res = det.frame(bufL, channels >= 2 ? bufR : null);
+
+          // 只有确认左右声道真的不同 (不是"双单声道")，才显示立体声
+          if (res.stereo && !stereoShown) { stereoShown = true; micBtn.textContent = "🎙️ Stereo Mic…"; }
+
+          windBarFill.style.width = `${res.bar}%`;
+
+          if (res.blow) {
+            const sideHint = res.stereo && Math.abs(res.balance) > 0.22
+              ? (res.balance < 0 ? "Blowing left side…" : "Blowing right side…")
+              : "Keep blowing steadily…";
+            say(sideHint);
+            applyWind(res.power, res.balance);
+          } else {
+            isBlowingNow = false;
+            if (res.building) {
+              say("A bit harder — flames bend back if you stop!");
+              candles.forEach(c => {
+                if (c.lit) c.tilt = Math.max(-0.3, Math.min(0.3, c.tilt + 0.14));
+              });
+            } else if (res.notBlow) {
+              say("That sounds like voice or music — blow a steady puff of air at the mic.");
+            }
+          }
+
+          if (micListening && !candles.every(c => !c.lit)) {
+            requestAnimationFrame(pollMic);
+          }
+        }
+        requestAnimationFrame(pollMic);
+      } catch (err) {
+        document.getElementById("ritual-whisper").textContent = "Mic unavailable — press and hold Blow instead.";
       }
-      animate();
-    </script>
-  </body>
+    });
+
+    document.getElementById("btn-lighter").addEventListener("click", () => {
+      ensureAudio();
+      relightAll19();
+    });
+
+    document.getElementById("btn-skip-letter").addEventListener("click", () => {
+      ensureAudio();
+      stopMic();
+      playSong();
+      goAct(3);
+    });
+
+    /* =========================================================================
+       6. ACT III: MUSIC TOGGLE, RELIGHT & MICRO EASTER EGGS
+    ========================================================================= */
+    document.getElementById("btn-music-toggle").addEventListener("click", () => {
+      ensureAudio();
+      if (isSongPlaying) stopSong();
+      else playSong();
+    });
+
+    document.getElementById("btn-back-cake").addEventListener("click", () => {
+      stopSong();
+      goAct(2);
+      relightAll19();
+    });
+
+    const EGG_MESSAGES = {
+      clair: "23 May · “it’s clair de lune on the piano — when she pour wine on his suit. 38”",
+      lala: "19 Oct · “we the lala of the centery” · “i meant Chinese lala, not farsi lala 🫑”",
+      sat: "23 May · “unsatisfaction vs dissatisfaction” → Zari: “satisfaction’t ✅”",
+      seat76: "6 Nov · “i don’t like ppl to bark when I’m watching a movie” · Seat #76 reserved tonight.",
+      plate: "24 Aug · “i eat all anyways — the plate a lil hard to chew but it’s ok”"
+    };
+
+    document.querySelectorAll(".egg").forEach(el => {
+      el.addEventListener("click", () => {
+        const key = el.dataset.egg;
+        if (EGG_MESSAGES[key]) showToast(EGG_MESSAGES[key]);
+      });
+    });
+  })();
+  </script>
+</body>
 </html>
